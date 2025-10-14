@@ -102,10 +102,10 @@ function plotFitQuality(system, dataset; mode = :combined, legend = true, ids = 
             end
         end
 
-        ogparameters = copy(system.kineticparameters)
-        system.kineticparameters .= system.estimatedparameters
+        ogparameters = copy(system.parameters)
+        system.parameters .= system.estimatedparameters
         nfiti, Cssi, d43i = simulateCSD(L, τi, Ti, Cfi, system)
-        system.kineticparameters .= ogparameters
+        system.parameters .= ogparameters
 
         if mode != :combined
             ax = Axis(fig[r,c], xlabel = "particle size L [μm]", ylabel = "ln(n(L))", 
@@ -187,10 +187,10 @@ function plotAttainableRegion_dynamic(system, conditions, d43, P; kws...)
                 Cf_i = conditions[1,i]
                 tau_i = conditions[2,i]
                 T_i = conditions[3,i]
-                ogparameters = copy(system.kineticparameters)
-                system.kineticparameters .= system.estimatedparameters
+                ogparameters = copy(system.parameters)
+                system.parameters .= system.estimatedparameters
                 n_i, Css_i, d43_i = simulateCSD(L, tau_i, T_i, Cf_i, system)
-                system.kineticparameters .= ogparameters
+                system.parameters .= ogparameters
                 nobs[counter][] = L.^3 .* n_i ./1e6 .* 1e4
                 ARobs[counter][] = Point2(P[i]*3600, d43[i]*1e6)
                 prob = IntervalNonlinearProblem((T, p) -> Cstar(T) - Cf_i, extrema(Trange)) 
