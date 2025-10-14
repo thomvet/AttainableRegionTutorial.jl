@@ -1,3 +1,8 @@
+name = "AttainableRegionTutorial"
+uuid = "346254e6-cb2b-4acd-9c55-28954fe4c97c"
+authors = ["Thomas Vetter <thomvet@users.noreply.github.com> and Giovanni Aprile"]
+version = "1.0.0"
+
 [deps]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
