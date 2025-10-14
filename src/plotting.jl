@@ -40,7 +40,7 @@ function plotCSDs(dataset; mode = :combined, ids = 1:length(dataset.T), kws...)
             ax = Axis(fig[r,c], xlabel = "particle size L [μm]", ylabel = "L³n(L) × 10⁻⁴ [#/μm]", 
                     title = "Dataset $val, d₄₃ = $b μm", xticks = 0:400:2000, 
                     yticks = 0:0.4:2.4, yticklabelsvisible = yticklabelsvisible, 
-                    ylabelvisible = ylabelvisible, xticklabelsvisible = xtickslabelsvisible,
+                    ylabelvisible = ylabelvisible, xticklabelsvisible = xticklabelsvisible,
                     xlabelvisible = xlabelvisible)
         end
         #note the units: n has [m^-3], L^3 has [m^3], therefore expressing L^3n(L) in [um^-1] 

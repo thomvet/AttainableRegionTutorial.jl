@@ -23,8 +23,8 @@ function generateAttainableRegion(system; temperaturerange = (5.0, 75.0),
     end
 
     L = collect(range(0, 6000e-6, length = 1001))
-    ogparameters = copy(system.kineticparameters)
-    system.kineticparameters .= system.estimatedparameters
+    ogparameters = copy(system.parameters)
+    system.parameters .= system.estimatedparameters
     for i in 1:size(conditions, 2)
         @show i
         Cf_i = conditions[1,i]
@@ -36,7 +36,7 @@ function generateAttainableRegion(system; temperaturerange = (5.0, 75.0),
             Pall[i] = (conditions[1,i] - Css_i)/tau_i #kg/m3/s
         end       
     end
-    system.kineticparameters .= ogparameters
+    system.parameters .= ogparameters
 
     return conditions, d43all, Pall
 end

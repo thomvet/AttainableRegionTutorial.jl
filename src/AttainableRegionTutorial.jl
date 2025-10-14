@@ -5,8 +5,7 @@ using StableRNGs
 using NonlinearSolve, GLMakie, Printf
 using Statistics 
 
-using Optimization, OptimizationPRIMA, OptimizationBBO
-using OptimizationPolyalgorithms, LikelihoodProfiler, OrdinaryDiffEq
+using Optimization, OptimizationBBO, OptimizationPolyalgorithms
 using LinearAlgebra
 
 const rng = StableRNG(1234) #for reproducibility of random numbers
@@ -22,6 +21,7 @@ include("parameter_estimation.jl")
 include("attainable_region_generation.jl")
 include("plotting.jl")
 
-export SystemSpecification, generateDataset
+export SystemSpecification, generateDataset, estimateParameters, generateAttainableRegion
+export plotCSDs, plotFitQuality, plotAttainableRegion_dynamic
 
 end
