@@ -5,7 +5,7 @@ using StableRNGs
 using NonlinearSolve, GLMakie, Printf
 using Statistics 
 
-using Optimization, OptimizationPRIMA, OptimizationBBO, Optim, OptimizationOptimJL
+using Optimization, OptimizationPRIMA, OptimizationBBO
 using OptimizationPolyalgorithms, LikelihoodProfiler, OrdinaryDiffEq
 using LinearAlgebra
 
