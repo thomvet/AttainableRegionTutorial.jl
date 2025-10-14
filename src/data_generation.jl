@@ -23,7 +23,7 @@ end
     solubility::F1 = Cstar
     growthrate::F2 = G
     nucleationrate::F3 = B
-    kineticparameters::Vector{Float64} = [3e5, 2.0, 1.6, 3.34e-4, 1.1, 1.44e4]
+    parameters::Vector{Float64} = [3e5, 2.0, 1.6, 3.34e-4, 1.1, 1.44e4]
     estimatedparameters::Vector{Float64} = NaN*ones(6)
 end
 
@@ -51,8 +51,7 @@ function generateDataset(; system = SystemSpecification(), nBins = 101, maxSize 
     end
 
     meanlogn = mean(log.(n))
-    for i in eachindex(T)
-        
+    for i in eachindex(T)        
         nnoise[:,i] = exp.(log.(n[:,i]) .+ noiselevel.*meanlogn.*(0.5 .- rand(rng, length(L))))
     end
 

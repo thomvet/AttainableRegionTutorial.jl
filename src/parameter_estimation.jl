@@ -2,7 +2,7 @@
 function errorFun(parameters, systemdataset)
     system = systemdataset[1]
     dataset = systemdataset[2]
-    system.kineticparameters .= parameters
+    system.parameters .= parameters
     ssq = zero(eltype(parameters))
     (; L, T, τ, nnoise, Cf)  = dataset
     for i in 1:length(T)
@@ -18,10 +18,10 @@ end
 
 function estimateParameters(system, dataset, errorFun = errorFun, initialguess = nothing)
     if isnothing(initialguess)
-        kp = system.kineticparameters
+        kp = system.parameters
         initialguess = kp .* (1.1 .- 0.2*rand(rng,length(kp)))
     end
-    ogparameters = copy(system.kineticparameters)
+    ogparameters = copy(system.parameters)
     optfun = OptimizationFunction(errorFun, AutoFiniteDiff())
     lb = [1e2, 0, 0, 1e-10, 0, 0,]
     ub = [1e10, 10, 10, 1e-2, 10, 1e5]
@@ -34,7 +34,7 @@ function estimateParameters(system, dataset, errorFun = errorFun, initialguess =
     sol3 = solve(prob3, PolyOpt())
     optparameters = sol3.minimizer
     #optparameters = sol2.minimizer
-    system.kineticparameters .= ogparameters
+    system.parameters .= ogparameters
     system.estimatedparameters .= optparameters
     return optparameters
 end

@@ -3,7 +3,7 @@ function findCss(Css, system, τ, T, Cf)
     M = Cf - Css
     
     #Evaluate kinetic expressions and solubility
-    parameters = system.kineticparameters
+    parameters = system.parameters
     nucp = @view parameters[1:3]
     growthp = @view parameters[4:6]
     cstar = system.solubility(T)
@@ -20,7 +20,7 @@ function findCss(Css, system, τ, T, Cf)
 end
 
 function simulateCSD(L, τ, T, Cf, system)
-    (; kineticparameters, solubility, nucleationrate, growthrate) = system
+    (; parameters, solubility, nucleationrate, growthrate) = system
     cstar = solubility(T)
     midPoint = (cstar + Cf) / 2
     #we first attempt solving the nonlinear equation using a bracketing method focussing on 
@@ -37,8 +37,8 @@ function simulateCSD(L, τ, T, Cf, system)
 
     #Calculate CSD
     M = Cf - Css
-    nucp = @view kineticparameters[1:3]
-    growthp = @view kineticparameters[4:6]
+    nucp = @view parameters[1:3]
+    growthp = @view parameters[4:6]
     S = log(Css/cstar)
     b = nucleationrate(S, M, nucp)
     g = growthrate(S, T, growthp)
