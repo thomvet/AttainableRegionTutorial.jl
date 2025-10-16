@@ -30,7 +30,7 @@ end
     estimatedparameters::Vector{Float64} = NaN*ones(6)
 end
 
-subscript(x) = join(["₀","₁","₂","₃","₄","₅","₆","₇","₈","₉"][digit+1] for digit in digits(x))
+subscript(x) = join(["₀","₁","₂","₃","₄","₅","₆","₇","₈","₉"][digit+1] for digit in reverse(digits(x)))
 
 function Base.show(io::IO, ::MIME"text/plain", z::SystemSpecification)
     Np = length(z.parameters)
