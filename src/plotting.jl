@@ -3,7 +3,7 @@ function plotCSDs(dataset; mode = :combined, ids = 1:length(dataset.T), kws...)
     fig = Figure(; kws...)
 
     if mode == :combined
-        ax = Axis(fig[1,1], xlabel = "L [μm]", ylabel = "L³n(L) × 10⁻⁴ [#/μm]", xticks = 0:400:2000, 
+        ax = Axis(fig[1,1], xlabel = "particle size L [μm]", ylabel = "volume weighted CSD, L³n(L) × 10⁻⁴ [#/μm]", xticks = 0:400:2000, 
                     yticks = 0:0.4:2.4, aspect = 1)
     end
 
@@ -71,7 +71,7 @@ function plotFitQuality(system, dataset; mode = :combined, legend = true, ids = 
     fig = Figure(; kws...)
 
     if mode == :combined
-        ax = Axis(fig[1,1], xlabel = "L [μm]", ylabel = "ln(n(L))", xticks = 0:400:2000, yticks = 0:5:40,
+        ax = Axis(fig[1,1], xlabel = "particle size L [μm]", ylabel = "ln(n(L))", xticks = 0:400:2000, yticks = 0:5:40,
             aspect = 1)
     end
     (; L, τ, T, Cf, nnoise) = dataset
@@ -138,7 +138,7 @@ function plotAttainableRegion_dynamic(system, conditions, d43, P; kws...)
     ax3 = Axis(fig[1,3], aspect = 1, xlabel = "temperature T [°C]", 
             ylabel = "concentration [kg m⁻³]", title = "Operating policy")
 
-    plt = scatter!(ax1, P*3600, d43*1e6, markersize = 3, color = :gray48)
+    plt = scatter!(ax1, P*3600, d43*1e6, markersize = 3, color = :gray70)
 
     (; solubility) = system
 
