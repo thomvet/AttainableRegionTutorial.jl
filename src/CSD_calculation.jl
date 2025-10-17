@@ -4,12 +4,11 @@ function findCss(Css, system, τ, T, Cf)
     
     #Evaluate kinetic expressions and solubility
     parameters = system.parameters
-    nucp = @view parameters[1:3]
-    growthp = @view parameters[4:6]
-    cstar = system.solubility(T)
+    ps, pg, pn = __indexp(system)
+    cstar = system.solubility(T, ps)
     S = log(Css/cstar)
-    b = system.nucleationrate(S, M, nucp)
-    g = system.growthrate(S, T, growthp)
+    b = system.nucleationrate(S, M, pn)
+    g = system.growthrate(S, T, pg)
 
     #magma density calculated from analytical solution of CSD
     (; crystaldensity, shapefactor) = system 
@@ -19,14 +18,26 @@ function findCss(Css, system, τ, T, Cf)
                   #density calculated via CSD must be zero
 end
 
+function __indexp(system)
+    parameters = system.parameters
+    Ns = system.solubility.Nparameters
+    Ng = system.growthrate.Nparameters
+    Nn = system.nucleationrate.Nparameters
+    ps = @view parameters[1:Ns]
+    pg = @view parameters[Ns+1:Ns+Ng]
+    pn = @view parameters[Ns+Ng+1:Ns+Ng+Nn]
+    return ps, pg, pn
+end
+
 function simulateCSD(L, τ, T, Cf, system)
-    (; parameters, solubility, nucleationrate, growthrate) = system
-    cstar = solubility(T)
+    (; solubility, nucleationrate, growthrate) = system
+    ps, pg, pn = __indexp(system) 
+    cstar = solubility(T, ps)
     midPoint = (cstar + Cf) / 2
     #we first attempt solving the nonlinear equation using a bracketing method focussing on 
     #the l.h.s interval (cstar, midPoint). This is to avoid the trivial steady state 
     #(M = 0), which always exists with the kinetics specified in the tutorial.
-    f = (Css, parameters) -> findCss(Css, system, τ, T, Cf)
+    f = (Css, p) -> findCss(Css, system, τ, T, Cf)
     prob = IntervalNonlinearProblem(f, (cstar, midPoint), system) 
     sol = solve(prob)
     if sol.retcode == SciMLBase.ReturnCode.InitialFailure #In case we did not find Css, consider other half of interval.
@@ -37,11 +48,9 @@ function simulateCSD(L, τ, T, Cf, system)
 
     #Calculate CSD
     M = Cf - Css
-    nucp = @view parameters[1:3]
-    growthp = @view parameters[4:6]
     S = log(Css/cstar)
-    b = nucleationrate(S, M, nucp)
-    g = growthrate(S, T, growthp)
+    b = nucleationrate(S, M, pn)
+    g = growthrate(S, T, pg)
     n = b./g.*exp.(-L./g./τ)
     d43 = 4*g*τ #comes from analytical solution of PBE
     return n, Css, d43

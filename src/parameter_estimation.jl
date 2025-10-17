@@ -4,9 +4,9 @@ function errorFun(parameters, systemdataset)
     dataset = systemdataset[2]
     system.parameters .= parameters
     ssq = zero(eltype(parameters))
-    (; L, T, τ, nnoise, Cf)  = dataset
+    (; L, T, τ, n, Cf)  = dataset
     for i in 1:length(T)
-        nnoisei = @view nnoise[:,i]
+        nnoisei = @view n[:,i]
         Ti = T[i]
         τi = τ[i]
         Cfi = Cf[i]
@@ -16,27 +16,25 @@ function errorFun(parameters, systemdataset)
     return ssq
 end
 
-function estimateParameters(system, dataset; algorithm = LBFGS(), errorFun = errorFun, initialguess = nothing)
+function estimateParameters(system, dataset; algorithm = PolyOpt(), errorFun = errorFun, initialguess = nothing)
     if isnothing(initialguess)
         kp = system.parameters
         initialguess = kp .* (1.1 .- 0.2*rand(rng, length(kp)))
     end
-    ogparameters = copy(system.parameters)
+    systemcopy = deepcopy(system)
     optfun = OptimizationFunction(errorFun, AutoFiniteDiff())
     lb = [1e2, 0, 0, 1e-10, 0, 0,]
     ub = [1e10, 10, 10, 1e-2, 10, 1e5]
 
     if typeof(algorithm) == typeof(LBFGS()) || typeof(algorithm) == typeof(BBO_adaptive_de_rand_1_bin_radiuslimited())
-        prob = OptimizationProblem(optfun, initialguess, (system, dataset), lb = lb, ub = ub)
+        prob = OptimizationProblem(optfun, initialguess, (systemcopy, dataset), lb = lb, ub = ub)
     elseif algorithm == PolyOpt()
-        prob = OptimizationProblem(optfun, initialguess, (system, dataset))
+        prob = OptimizationProblem(optfun, initialguess, (systemcopy, dataset))
     else
         error("Unknown optimization algorithm specified, valid options are: LBFGS(), PolyOpt(), BBO_adaptive_de_rand_1_bin_radiuslimited().")
     end    
 
     sol = solve(prob, algorithm)
-    optparameters = sol.minimizer
-    system.parameters .= ogparameters
-    system.estimatedparameters .= optparameters
-    return optparameters
+    systemcopy.parameters .= sol.minimizer
+    return systemcopy
 end

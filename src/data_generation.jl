@@ -1,8 +1,99 @@
+"""
+
+Contains a function describing kinetics of a crystallization mechanism and information on 
+how many optimizable parameters occur in the function.
+
+## Fields
+$FIELDS
+
+## Constructors
+
+```
+FunctionalExpression(f::Function, Nparameters::Integer)
+```
+
+## Examples
+`S` is supersaturation ln(c/c*) where c* is solubility.
+`T` is temperature in °C
+`M` is normalized suspension density
+
+# Example 1: Growth rate definition
+```
+g = (S, T, p) -> p[1] * S^p[2] * exp(-p[3] / (T + 273.15)) 
+growthrate = FunctionalExpression(g, 3) #3 parameters occur in g
+```
+
+# Example 2: Nucleation rate definitions
+
+```
+b1 = (S, M, p) -> p[1] * S^p[2] * M^p[3] 
+nucleationrate1 = FunctionalExpression(b1, 3) #3 parameters occur in b
+```
+```
+b2 = (S, M, p) -> p[1] * S^p[2]
+nucleationrate2 = FunctionalExpression(b2, 2) 
+```
+Note that function signature must be maintained despite `M` not appearing on r.h.s. of b2.
+
+# Example 3: Solubility line
+```
+cstar = (T, p) -> 3.79e-2*T^2 + 3.77e-1*T + 2.07e1
+solubility = FunctionalExpression(cstar, 0) 
+```
+
+"""
+struct FunctionalExpression{F}
+    "Function describing kinetics"
+    f::F
+    "Number of optimizable parameters in function"
+    Nparameters::Int64
+end
+
+function (x::FunctionalExpression)(y...)
+    x.f(y[1:end-1]..., y[end])
+end
 
 #Predefined kinetics and solubility as per tutorial
-B(S, M, p) = p[1]*S^p[2]*M^p[3] #nucleation rate, 
-G(S, T, p) = p[1]*S^p[2]*exp(-p[3]/8.31441/(T+273.15)) #crystal growth rate [m/s]
-Cstar(T) = 3.79e-2*T^2 + 3.77e-1*T + 2.07e1 #solubility [kg/m^3] against temperature [C]
+B(S, M, p) = p[1] * S^p[2] * M^p[3] #nucleation rate [m⁻³ s ⁻¹]
+G(S, T, p) = p[1] * S^p[2] * exp(- p[3] / 8.31441 / (T+273.15)) #crystal growth rate [m/s]
+Cstar(T, p) = 3.79e-2*T^2 + 3.77e-1*T + 2.07e1 #solubility [kg/m^3] against temperature [C]
+
+"""
+
+A system specification contains material constants, a solubility expression, crystallization 
+kinetics and parameters involved in those expressions. 
+
+## Fields
+$FIELDS
+
+## Constructors
+
+```
+b = (S, M, p) -> p[1] * S^p[2] * M^p[3]
+g = (S, T, p) -> p[1] * S^p[2] * exp(- p[3] / 8.31441 / (T+273.15))
+cstar = (T,p) -> 3.79e-2*T^2 + 3.77e-1*T + 2.07e1
+SystemSpecification(; crystaldensity = 1200.0,
+         crystalshapefactor = pi / 6,
+         solubility = FunctionalExpression(cstar, 0),
+         nucleationrate = FunctionalExpression(b, 3),
+         growthrate = FunctionalExpression(g, 3))
+```
+
+"""
+@kwdef struct SystemSpecification{F1,F2,F3}
+    "Density of the crystalline material [kg m⁻³]"
+    crystaldensity::Float64 = 1200.0
+    "Volume shape factor k, so that volume of a crystal is V = kL³"
+    shapefactor::Float64 = pi/6
+    "Solubility function [kg m⁻³]"
+    solubility::F1 = FunctionalExpression(Cstar, 0)
+    "Growth rate  [m s ⁻¹]"
+    growthrate::F2 = FunctionalExpression(G, 3)
+    "Nucleation rate [kg m⁻³]"
+    nucleationrate::F3 = FunctionalExpression(B, 3)
+    "Vector of parameters occuring in the growth and nucleation rates"
+    parameters::Vector{Float64} = [3.34e-4, 1.1, 1.44e4, 3e5, 2.0, 1.6]
+end
 
 #Define Dataset structure
 struct Dataset
@@ -18,38 +109,28 @@ struct Dataset
     n::Matrix{Float64} 
 end
 
-#Define System specification; contains all kinetic parameters, material constants and 
-#solubility information
-@kwdef struct SystemSpecification{F1,F2,F3}
-    crystaldensity::Float64 = 1200.0
-    shapefactor::Float64 = pi/6
-    solubility::F1 = Cstar
-    growthrate::F2 = G
-    nucleationrate::F3 = B
-    parameters::Vector{Float64} = [3e5, 2.0, 1.6, 3.34e-4, 1.1, 1.44e4]
-    estimatedparameters::Vector{Float64} = NaN*ones(6)
-end
-
-subscript(x) = join(["₀","₁","₂","₃","₄","₅","₆","₇","₈","₉"][digit+1] for digit in reverse(digits(x)))
-
 function Base.show(io::IO, ::MIME"text/plain", z::SystemSpecification)
     Np = length(z.parameters)
 
     column_labels_matconst = ["shapefactor", "crystaldensity"]
     column_labels_kintherm = ["solubility", "growthrate", "nucleationrate"]
-    column_labels_parameters = ["p"*subscript(i) for i in 1:Np]
-    row_labels_parameters = ["True", "Estimated", "Deviation (%)"]
+    row_labels_kintherm = ["Function", ["p"*subscript(i) for i in 1:Np]...]
 
     pt_matconst = pretty_table([z.shapefactor z.crystaldensity];
-        column_labels = column_labels_matconst, title = "Material Constants")    
-    pt_kintherm = pretty_table([z.solubility z.growthrate z.nucleationrate];
-        column_labels = column_labels_kintherm, title = "Kin./Therm. Functions")
-    
-    dev = (z.estimatedparameters .- z.parameters) ./ z.parameters .* 100
-    data = [z.parameters'; z.estimatedparameters'; dev']
-    pt_parameters = pretty_table(data;
-        column_labels = column_labels_parameters, row_labels = row_labels_parameters, 
-            title = "Kinetic Parameters")
+        column_labels = column_labels_matconst, title = "Material Constants")
+
+    s = z.solubility
+    g = z.growthrate
+    n = z.nucleationrate
+    p = z.parameters
+
+    one = [p[1:s.Nparameters]..., ["" for _ in s.Nparameters+1:Np]...]
+    two = [["" for _ in 1:s.Nparameters]..., p[s.Nparameters+1:s.Nparameters+g.Nparameters]..., ["" for _ in s.Nparameters+g.Nparameters+1:Np]...]
+    three =  [["" for _ in 1:s.Nparameters+g.Nparameters]..., [p[s.Nparameters+g.Nparameters+1:Np]...]...]
+    data_kintherm = [s.f g.f n.f; one two three]
+    pt_kintherm = pretty_table(data_kintherm;
+        column_labels = column_labels_kintherm, title = "Kin./Therm. Functions", 
+        row_labels = row_labels_kintherm, row_label_column_alignment = :l)
 end
 
 function Dataset(residencetimes, temperatures, feedconcentrations, 
@@ -95,12 +176,7 @@ function Base.show(io::IO, ::MIME"text/plain", z::Dataset)
     end
     data = [z.τ'; z.T'; z.Cf'; plotmat]
 
-    footnotes = [
-        (:row_label, 1, 2) => "Footnote in column label",
-    ]
-
     source_notes = "τ: residence time [s], T: temperature [°C], Cf: feed concentration [kg m⁻³], L³n(L): volume-weighted CSD [μm⁻¹]"
-
     column_labels = ["Dataset $i" for i in 1:Nsets]
     row_labels = ["τ", "T", "Cf", "L³n(L)"]
     
@@ -110,5 +186,10 @@ function Base.show(io::IO, ::MIME"text/plain", z::Dataset)
             row_label_column_alignment = :l, source_notes = source_notes)
 end
 
-# ylabel = "L³n(L) [μm⁻¹]", xlabel = "L [μm]"
-#[s] [°C] [kg m⁻³]
+function Base.copy(x::SystemSpecification)
+    F = propertynames(x)    
+    y = SystemSpecification([getproperty(x, f) for f in F]...)
+end
+
+#provides multi-digit subscripts programmatically
+subscript(x) = join(["₀","₁","₂","₃","₄","₅","₆","₇","₈","₉"][digit+1] for digit in reverse(digits(x)))

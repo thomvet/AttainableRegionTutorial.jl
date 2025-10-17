@@ -8,6 +8,7 @@ using Statistics
 using Optimization, OptimizationBBO, OptimizationPolyalgorithms, OptimizationOptimJL
 using LinearAlgebra
 
+using DocStringExtensions
 using PrettyTables
 using UnicodePlots
 

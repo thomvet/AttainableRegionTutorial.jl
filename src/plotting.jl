@@ -1,5 +1,5 @@
 #CSD plots 
-function plotCSDs(dataset; mode = :combined, ids = 1:length(dataset.T), kws...)
+function plotCSDs(dataset, system = nothing; mode = :combined, ids = 1:length(dataset.T), kws...)
     fig = Figure(; kws...)
 
     if mode == :combined
@@ -10,7 +10,7 @@ function plotCSDs(dataset; mode = :combined, ids = 1:length(dataset.T), kws...)
     colors = to_colormap(:Paired_12)
     colors[11] = RGBAf(0.0,0.0,0.0,1.0) #replace pale yellow color with black
 
-    (; L, n, nnoise) = dataset
+    (; L, n, T, τ, Cf) = dataset
     for (i, val) in enumerate(ids)
         if mode != :combined
             if i <= 5
@@ -33,7 +33,7 @@ function plotCSDs(dataset; mode = :combined, ids = 1:length(dataset.T), kws...)
             end
         end
         
-        m43 = sum(L.^4 .*nnoise[:,val]) / sum(L.^3 .*nnoise[:,val])
+        m43 = sum(L.^4 .*n[:,val]) / sum(L.^3 .*n[:,val])
         b = @sprintf "%.0f" m43*1e6
 
         if mode != :combined
@@ -45,9 +45,12 @@ function plotCSDs(dataset; mode = :combined, ids = 1:length(dataset.T), kws...)
         end
         #note the units: n has [m^-3], L^3 has [m^3], therefore expressing L^3n(L) in [um^-1] 
         #means dividing by the numbers by 1e6, then we bring them on a nicer intervall by the 1e4.
-        lines!(ax, 1e6.*L, L.^3 ./1e6 .*n[:,val]*1e4, color = colors[val])
+        if isa(system, SystemSpecification)
+            nsim, _ = simulateCSD(L, τ[val], T[val], Cf[val], system)
+            lines!(ax, 1e6.*L, L.^3 ./1e6 .*nsim*1e4, color = colors[val])
+        end
         c = @sprintf "Dataset %2.0f" val
-        scatter!(ax, 1e6.*L, L.^3 ./1e6 .*nnoise[:,val]*1e4, color = colors[val], label = "$c, d₄₃ = $b μm") 
+        scatter!(ax, 1e6.*L, L.^3 ./1e6 .*n[:,val]*1e4, color = colors[val], label = "$c, d₄₃ = $b μm") 
         xlims!(ax, 0, 2000)
         ylims!(ax, 0, 2.4)
     end
@@ -74,13 +77,13 @@ function plotFitQuality(system, dataset; mode = :combined, legend = true, ids = 
         ax = Axis(fig[1,1], xlabel = "particle size L [μm]", ylabel = "ln(n(L))", xticks = 0:400:2000, yticks = 0:5:40,
             aspect = 1)
     end
-    (; L, τ, T, Cf, nnoise) = dataset
+    (; L, τ, T, Cf, n) = dataset
 
     for (i, val) in enumerate(ids)
         τi = τ[val]
         Ti = T[val]
         Cfi = Cf[val]
-        nnoisei = nnoise[:,val]
+        ni = n[:,val]
         if mode != :combined
             if i <= 5
                 c = i
@@ -102,10 +105,7 @@ function plotFitQuality(system, dataset; mode = :combined, legend = true, ids = 
             end
         end
 
-        ogparameters = copy(system.parameters)
-        system.parameters .= system.estimatedparameters
         nfiti, Cssi, d43i = simulateCSD(L, τi, Ti, Cfi, system)
-        system.parameters .= ogparameters
 
         if mode != :combined
             ax = Axis(fig[r,c], xlabel = "particle size L [μm]", ylabel = "ln(n(L))", 
@@ -114,7 +114,7 @@ function plotFitQuality(system, dataset; mode = :combined, legend = true, ids = 
                 yticklabelsvisible = yticklabelsvisible, xticklabelsvisible = xticklabelsvisible)
         end
         c = @sprintf "Dataset %2.0f" val
-        scatter!(ax, 1e6.*L[1:2:end], log.(nnoisei[1:2:end]), color = colors[val])
+        scatter!(ax, 1e6.*L[1:2:end], log.(ni[1:2:end]), color = colors[val])
         lines!(ax, 1e6.*L, log.(nfiti), color = colors[val], linestyle = :dash, label = "$c, d₄₃ = $(round(d43i*1e6)) μm")
         xlims!(ax, 0, 2000)
         ylims!(ax, 15, 35)        
@@ -141,6 +141,7 @@ function plotAttainableRegion_dynamic(system, conditions, d43, P; kws...)
     plt = scatter!(ax1, P*3600, d43*1e6, markersize = 3, color = :gray70)
 
     (; solubility) = system
+    ps, _, _ = __indexp(system)
 
     #make a reset button
     button = Button(fig[3,2], label = "Reset figure", tellwidth = false) 
@@ -161,8 +162,9 @@ function plotAttainableRegion_dynamic(system, conditions, d43, P; kws...)
     rowsize!(fig.layout, 2,  Fixed(80))
     rowsize!(fig.layout, 3,  Fixed(30))
 
-    Trange = 0.0:1.0:80.0
-    lines!(ax3, Trange, solubility.(Trange), color = :black, label = "solubility")
+    Text = extrema(conditions[3, :])
+    Trange = range(Text[1]-5, Text[2]+5, length = 201)
+    lines!(ax3, Trange, solubility.(Trange, Ref(ps)), color = :black, label = "solubility")
     counter = 0
 
     L = collect(range(0.0, 3000e-6, length = 201))
@@ -187,13 +189,10 @@ function plotAttainableRegion_dynamic(system, conditions, d43, P; kws...)
                 Cf_i = conditions[1,i]
                 tau_i = conditions[2,i]
                 T_i = conditions[3,i]
-                ogparameters = copy(system.parameters)
-                system.parameters .= system.estimatedparameters
                 n_i, Css_i, d43_i = simulateCSD(L, tau_i, T_i, Cf_i, system)
-                system.parameters .= ogparameters
                 nobs[counter][] = L.^3 .* n_i ./1e6 .* 1e4
                 ARobs[counter][] = Point2(P[i]*3600, d43[i]*1e6)
-                prob = IntervalNonlinearProblem((T, p) -> Cstar(T) - Cf_i, extrema(Trange)) 
+                prob = IntervalNonlinearProblem((T, p) -> system.solubility(T, ps) - Cf_i, extrema(Trange)) 
                 sol = solve(prob)
                 Tsat = sol.u
                 OPobs[counter][] = [Tsat T_i T_i; Cf_i Cf_i Css_i]
