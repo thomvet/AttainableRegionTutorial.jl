@@ -76,7 +76,8 @@ SystemSpecification(; crystaldensity = 1200.0,
          crystalshapefactor = pi / 6,
          solubility = FunctionalExpression(cstar, 0),
          nucleationrate = FunctionalExpression(b, 3),
-         growthrate = FunctionalExpression(g, 3))
+         growthrate = FunctionalExpression(g, 3),
+         parameters = [3.34e-4, 1.1, 1.44e4, 3e5, 2.0, 1.6])
 ```
 
 """
@@ -96,12 +97,36 @@ SystemSpecification(; crystaldensity = 1200.0,
 end
 
 #Define Dataset structure
+"""
+
+A dataset consists of MSMPR crystallizer operating conditions and associated measurement 
+results. For the purpose of this tutorial data is assumed to consist of steady state crystal
+size distributions that all possess the same discretization.
+
+## Fields
+$FIELDS
+
+## Constructors
+
+To generate artificial data from a model:
+```
+Dataset(residencetimes, temperatures, feedconcentrations, 
+        system::SystemSpecification = SystemSpecification(); 
+        nBins = 101, maxSize = 2000e-6, noiselevel = 0.02)
+```
+
+To directly supply measured data:
+```
+Dataset(residencetimes, temperatures, feedconcentrations, particlesizes, CSDs)
+```
+
+"""
 struct Dataset
-    "Vector of residence times [s]."
+    "Vector of residence times [s]"
     τ::Vector{Float64} 
-    "Vector of temperatures [°C]."
+    "Vector of temperatures [°C]"
     T::Vector{Float64} 
-    "Vector of feed concentrations [kg m⁻³]."
+    "Vector of feed concentrations [kg m⁻³]"
     Cf::Vector{Float64} 
     "Vector of crystal sizes at which CSD data is available [m]."
     L::Vector{Float64} 
