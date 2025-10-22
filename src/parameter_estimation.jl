@@ -47,7 +47,7 @@ parameters in `system`) or can be a user-supplied guess (must match length of pa
 
 `PolyOpt()` is a Poly-algorithm that explores dafdafa using the [ADAM optimizer](https://arxiv.org/abs/1412.6980) as built into [Optimisers.jl](https://github.com/FluxML/Optimisers.jl) 
 
-`BBO_adaptive_de_rand_1_bin_radiuslimited()` is an evolutionary algorithm from the package [BlackBoxOptim.jl]().
+`BBO_adaptive_de_rand_1_bin_radiuslimited()` is an evolutionary algorithm from the package [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) (see also [Optimization.jl's documentation page](https://docs.sciml.ai/Optimization/stable/optimization_packages/blackboxoptim/)).
 
 `LBFGS()` is a quasi-Newton (Broyden-Fletcher-Goldfarb-Shanno) algorithm from the package [Optim.jl](https://julianlsolvers.github.io/Optim.jl/stable/algo/lbfgs/)
 

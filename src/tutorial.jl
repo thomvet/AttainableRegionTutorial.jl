@@ -11,25 +11,25 @@ dataset = Dataset(residencetimes, temperatures, feedconcentrations, system)
 
 #make plot of data
 #Re-create tutorial figure 
-fig = plotCSDs(dataset, ids = [1,4,6,10], fontsize = 20, 
+fig = plotCSDs(dataset, system, ids = [1,4,6,10], fontsize = 20, 
     figure_padding = 30)
 #Or plot all data
-fig2 = plotCSDs(dataset, mode = :separate, fontsize = 20, 
+fig2 = plotCSDs(dataset, system, mode = :separate, fontsize = 20, 
     figure_padding = 30)
 
 #Do parameter estimation
-estimatedParameters = estimateParameters(system, dataset, algorithm)
+estsystem = estimateParameters(system, dataset)
 
 #Plot quality of fit
 #Re-create tutorial figure 
-fig3 = plotFitQuality(system, dataset, ids = [1,4,6,10], 
+fig3 = plotFitQuality(estsystem, dataset, ids = [1,4,6,10], 
     mode = :combined, fontsize = 20, figure_padding = 30, legend = false)
 
 #Or plot all data
-fig4 = plotFitQuality(system, dataset, mode = :separate, fontsize = 20, figure_padding = 30)
+fig4 = plotFitQuality(estsystem, dataset, mode = :separate, fontsize = 20, figure_padding = 30)
 
 #Generate data for the attainable region
-conditions, d43, P = generateAttainableRegion(system)
+conditions, d43, P = generateAttainableRegion(estsystem)
 
 #Plot attainable region
 #static plot for the tutorial.

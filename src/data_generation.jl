@@ -14,8 +14,8 @@ FunctionalExpression(f::Function, Nparameters::Integer)
 
 ## Examples
 `S` is supersaturation ln(c/c*) where c* is solubility.
-`T` is temperature in °C
-`M` is normalized suspension density
+`T` is temperature in °C.
+`M` is normalized suspension density.
 
 # Example 1: Growth rate definition
 ```
@@ -33,7 +33,7 @@ nucleationrate1 = FunctionalExpression(b1, 3) #3 parameters occur in b
 b2 = (S, M, p) -> p[1] * S^p[2]
 nucleationrate2 = FunctionalExpression(b2, 2) 
 ```
-Note that function signature must be maintained despite `M` not appearing on r.h.s. of b2.
+Note that function signature must be maintained despite `M` not appearing on r.h.s. of `b2`.
 
 # Example 3: Solubility line
 ```

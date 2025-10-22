@@ -1,10 +1,31 @@
 #CSD plots 
-function plotCSDs(dataset, system = nothing; mode = :combined, ids = 1:length(dataset.T), kws...)
-    fig = Figure(; kws...)
+@doc raw"""
+```
+plotCSDs(dataset::Dataset, system::Union{Nothing, SystemSpecification} = nothing; 
+    ids = 1:length(dataset.T), mode = :combined, figure = (;), axis = (;), plot = (;))
+```
+
+Produces a plot of volume-weighted crystal size distributions. Data are plotted as points 
+while model outputs are shown as lines.
+
+`dataset` contains the data to be plotted. If providing `system`, the plot will also include 
+the model output as comparison to the data. `ids` can be used to specify which datasets are 
+included in the plot.
+
+For `mode = :combined` all selected datasets will be shown in a single subfigure whereas 
+`mode = :separate` plots each CSD in its own subfigure. 
+
+Figure, Axis and Plot properties can be freely adjusted by providing the keywords `figure`, 
+`axis`, and `plot` with a named tuple, e.g., `figure = (fontsize = 20, figure_padding = 30)`. 
+Informatoin on valid attributes can be found in the [Makie.jl Documentation](https://docs.makie.org/dev/). 
+"""
+function plotCSDs(dataset, system = nothing; ids = 1:length(dataset.T), mode = :combined, 
+        figure = (fontsize = 20, figure_padding = 30), axis = (;), plot = (;))
+    fig = Figure(; figure...)
 
     if mode == :combined
-        ax = Axis(fig[1,1], xlabel = "particle size L [μm]", ylabel = "volume weighted CSD, L³n(L) × 10⁻⁴ [#/μm]", xticks = 0:400:2000, 
-                    yticks = 0:0.4:2.4, aspect = 1)
+        ax = Axis(fig[1,1]; xlabel = "particle size L [μm]", ylabel = "volume weighted CSD, L³n(L) × 10⁻⁴ [#/μm]", xticks = 0:400:2000, 
+                    yticks = 0:0.4:2.4, aspect = 1, axis...)
     end
 
     colors = to_colormap(:Paired_12)
@@ -41,16 +62,17 @@ function plotCSDs(dataset, system = nothing; mode = :combined, ids = 1:length(da
                     title = "Dataset $val, d₄₃ = $b μm", xticks = 0:400:2000, 
                     yticks = 0:0.4:2.4, yticklabelsvisible = yticklabelsvisible, 
                     ylabelvisible = ylabelvisible, xticklabelsvisible = xticklabelsvisible,
-                    xlabelvisible = xlabelvisible)
+                    xlabelvisible = xlabelvisible, axis...)
         end
         #note the units: n has [m^-3], L^3 has [m^3], therefore expressing L^3n(L) in [um^-1] 
         #means dividing by the numbers by 1e6, then we bring them on a nicer intervall by the 1e4.
         if isa(system, SystemSpecification)
             nsim, _ = simulateCSD(L, τ[val], T[val], Cf[val], system)
-            lines!(ax, 1e6.*L, L.^3 ./1e6 .*nsim*1e4, color = colors[val])
+            lines!(ax, 1e6.*L, L.^3 ./1e6 .*nsim*1e4; color = colors[val], plot...)
         end
         c = @sprintf "Dataset %2.0f" val
-        scatter!(ax, 1e6.*L, L.^3 ./1e6 .*n[:,val]*1e4, color = colors[val], label = "$c, d₄₃ = $b μm") 
+        scatter!(ax, 1e6.*L, L.^3 ./1e6 .*n[:,val]*1e4; color = colors[val], 
+            label = "$c, d₄₃ = $b μm", plot...) 
         xlims!(ax, 0, 2000)
         ylims!(ax, 0, 2.4)
     end
