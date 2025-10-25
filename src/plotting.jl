@@ -1,8 +1,8 @@
 #CSD plots 
-@doc raw"""
+"""
 ```
-plotCSDs(dataset::Dataset, system::Union{Nothing, SystemSpecification} = nothing; 
-    ids = 1:length(dataset.T), mode = :combined, figure = (;), axis = (;), plot = (;))
+plotCSDs(dataset, system = nothing; ids = 1:length(dataset.T), mode = :combined, 
+        figure = (fontsize = 20, figure_padding = 30), axis = (;), plot = (;))
 ```
 
 Produces a plot of volume-weighted crystal size distributions. Data are plotted as points 
@@ -20,7 +20,8 @@ Figure, Axis and Plot properties can be freely adjusted by providing the keyword
 Informatoin on valid attributes can be found in the [Makie.jl Documentation](https://docs.makie.org/dev/). 
 """
 function plotCSDs(dataset, system = nothing; ids = 1:length(dataset.T), mode = :combined, 
-        figure = (fontsize = 20, figure_padding = 30), axis = (;), plot = (;))
+        figure = (fontsize = 20, figure_padding = 30), axis = (;), plot = (;), 
+        axislegend = (framevisible = false, position = :rt))
     fig = Figure(; figure...)
 
     if mode == :combined
@@ -28,13 +29,13 @@ function plotCSDs(dataset, system = nothing; ids = 1:length(dataset.T), mode = :
                     yticks = 0:0.4:2.4, aspect = 1, axis...)
     end
 
-    colors = to_colormap(:Paired_12)
+    colors = to_colormap(:Paired_12) #TODO: make colors customizable
     colors[11] = RGBAf(0.0,0.0,0.0,1.0) #replace pale yellow color with black
 
     (; L, n, T, τ, Cf) = dataset
     for (i, val) in enumerate(ids)
         if mode != :combined
-            if i <= 5
+            if i <= 5 #TODO: improve logic depending on number of datasets selected
                 c = i
                 r = 1
                 xticklabelsvisible = false
@@ -65,7 +66,8 @@ function plotCSDs(dataset, system = nothing; ids = 1:length(dataset.T), mode = :
                     xlabelvisible = xlabelvisible, axis...)
         end
         #note the units: n has [m^-3], L^3 has [m^3], therefore expressing L^3n(L) in [um^-1] 
-        #means dividing by the numbers by 1e6, then we bring them on a nicer intervall by the 1e4.
+        #means dividing by the numbers by 1e6, then we bring them on a nicer intervall by 
+        #multiplying with 1e4.
         if isa(system, SystemSpecification)
             nsim, _ = simulateCSD(L, τ[val], T[val], Cf[val], system)
             lines!(ax, 1e6.*L, L.^3 ./1e6 .*nsim*1e4; color = colors[val], plot...)
@@ -82,22 +84,53 @@ function plotCSDs(dataset, system = nothing; ids = 1:length(dataset.T), mode = :
             colgap!(fig.layout, i, Relative(0.03))
         end
     else
-        axislegend(ax, framevisible = false, position = :rt)
+        #need to qualify name, otherwise we try to call the named tuple
+        Makie.axislegend(ax; axislegend...) 
     end
     display(fig)
     return fig
 end
 
-function plotFitQuality(system, dataset; mode = :combined, legend = true, ids = 1:length(dataset.T), kws...)
+"""
+```
+plotFitQuality(system, dataset; mode = :combined, ids = 1:length(dataset.T), 
+        figure = (fontsize = 20, figure_padding = 30), 
+        axis = (xticks = 0:400:2000, yticks = 0:5:35, aspect = 1, limits = (0, 2000, 15, 35)), 
+        plot = (;), 
+        axislegend = (position = :rt, framevisible = false))
+```
+
+Produces a plot that compares shows quality of fit by comparing simulated CSDs with the 
+respective dataset on a logarithmic scale. Data are plotted as points while model outputs 
+are shown as lines.
+
+`dataset` contains the data to be plotted. `system` contains the kinetic para, the plot will also include 
+the model output as comparison to the data. `ids` can be used to specify which datasets are 
+included in the plot.
+
+For `mode = :combined` all selected datasets will be shown in a single subfigure whereas 
+`mode = :separate` plots each CSD in its own subfigure. 
+
+Figure, Axis and Plot properties can be freely adjusted by providing the keywords `figure`, 
+`axis`, and `plot` with a named tuple, e.g., `figure = (fontsize = 20, figure_padding = 30)`. 
+Information on valid attributes can be found in the [Makie.jl Documentation](https://docs.makie.org/dev/). 
+"""
+function plotFitQuality(system, dataset; mode = :combined, ids = 1:length(dataset.T), 
+        figure = (fontsize = 20, figure_padding = 30), axis = (xticks = 0:400:2000, yticks = 0:5:35,
+            aspect = 1, limits = (0, 2000, 15, 35)), plot = (;), 
+        axislegend = (position = :rt, framevisible = false))
     colors = to_colormap(:Paired_12)
     colors[11] = RGBAf(0.0,0.0,0.0,1.0) #replace pale yellow color with black
 
-    #quality of fit plot
-    fig = Figure(; kws...)
+    #if axislegend is provided as true, then simply select standard formatting.
+    if axislegend == true
+        axislegend = (position = :rt, framevisible = false)
+    end
+
+    fig = Figure(; figure...)
 
     if mode == :combined
-        ax = Axis(fig[1,1], xlabel = "particle size L [μm]", ylabel = "ln(n(L))", xticks = 0:400:2000, yticks = 0:5:40,
-            aspect = 1)
+        ax = Axis(fig[1,1], axis..., xlabel = "particle size L [μm]", ylabel = "ln(n(L))") #we do not allow to overwrite axis labels.
     end
     (; L, τ, T, Cf, n) = dataset
 
@@ -130,19 +163,18 @@ function plotFitQuality(system, dataset; mode = :combined, legend = true, ids = 
         nfiti, Cssi, d43i = simulateCSD(L, τi, Ti, Cfi, system)
 
         if mode != :combined
-            ax = Axis(fig[r,c], xlabel = "particle size L [μm]", ylabel = "ln(n(L))", 
-                title = "Dataset $val", xticks = 0:400:2000, yticks = 0:5:40,
-                ylabelvisible = ylabelvisible, xlabelvisible = xlabelvisible,
-                yticklabelsvisible = yticklabelsvisible, xticklabelsvisible = xticklabelsvisible)
+            ax = Axis(fig[r,c]; title = "Dataset $val", ylabelvisible = ylabelvisible, 
+                xlabelvisible = xlabelvisible, yticklabelsvisible = yticklabelsvisible, 
+                xticklabelsvisible = xticklabelsvisible, axis..., 
+                xlabel = "particle size L [μm]", ylabel = "ln(n(L))")
         end
         c = @sprintf "Dataset %2.0f" val
-        scatter!(ax, 1e6.*L[1:2:end], log.(ni[1:2:end]), color = colors[val])
-        lines!(ax, 1e6.*L, log.(nfiti), color = colors[val], linestyle = :dash, label = "$c, d₄₃ = $(round(d43i*1e6)) μm")
-        xlims!(ax, 0, 2000)
-        ylims!(ax, 15, 35)        
+        scatter!(ax, 1e6.*L[1:2:end], log.(ni[1:2:end]); color = colors[val], plot...)
+        lines!(ax, 1e6.*L, log.(nfiti); color = colors[val], linestyle = :dash, 
+            label = "$c, d₄₃ = $(round(d43i*1e6)) μm", plot...)       
     end
-    if mode == :combined && legend == true
-        axislegend(ax, position = :rt, framevisible = false)
+    if mode == :combined && axislegend != false
+        Makie.axislegend(ax; axislegend...)
     elseif mode != :combined
         for i in 1:min(length(ids), 4)
             colgap!(fig.layout, i, Relative(0.03))
@@ -151,16 +183,42 @@ function plotFitQuality(system, dataset; mode = :combined, legend = true, ids = 
     return fig
 end
 
-function plotAttainableRegion_dynamic(system, conditions, d43, P; kws...)
-    fig = Figure(; kws...)
-    ax1 = Axis(fig[1,1], xlabel = "productivity, P [kg m⁻³ h⁻¹]", ylabel = "mean particle size, d₄₃ [μm]", 
-            aspect = 1, xticks = [10, 250:250:1500...], yticks = 0:150:1200, title = "Attainable region")
-    ax2 = Axis(fig[1,2], aspect = 1, xlabel = "particle size L [μm]", 
-            ylabel = "L³n(L) × 10⁻⁴ [# μm⁻¹]", title = "Crystal size distribution")
-    ax3 = Axis(fig[1,3], aspect = 1, xlabel = "temperature T [°C]", 
-            ylabel = "concentration [kg m⁻³]", title = "Operating policy")
+"""
+```
+plotAttainableRegion_dynamic(system, conditions, d43, P; figure = (fontsize = 24, 
+    size = (1500, 900), figure_padding = 30), axis = (;), plot = (;))
+```
 
-    plt = scatter!(ax1, P*3600, d43*1e6, markersize = 3, color = :gray70)
+Produces a plot that compares shows quality of fit by comparing simulated CSDs with the 
+respective dataset on a logarithmic scale. Data are plotted as points while model outputs 
+are shown as lines.
+
+`dataset` contains the data to be plotted. `system` contains the kinetic para, the plot will also include 
+the model output as comparison to the data. `ids` can be used to specify which datasets are 
+included in the plot.
+
+For `mode = :combined` all selected datasets will be shown in a single subfigure whereas 
+`mode = :separate` plots each CSD in its own subfigure. 
+
+Figure, Axis and Plot properties can be freely adjusted by providing the keywords `figure`, 
+`axis`, and `plot` with a named tuple, e.g., `figure = (fontsize = 20, figure_padding = 30)`. 
+Information on valid attributes can be found in the [Makie.jl Documentation](https://docs.makie.org/dev/). 
+"""
+function plotAttainableRegion_dynamic(system, conditions, d43, P; figure = (fontsize = 24, 
+        size = (1500, 900), figure_padding = 30), axis1 = (;), axis2 = (;), axis3 = (;), 
+        plot1 = (markersize = 3, color = :gray70), plot2 = (markersize = 3, color = :gray70),
+        legend = (patchsize = (35, 35), rowgap = 10, orientation = :horizontal, labelsize = 14,
+            tellwidth = false))
+    fig = Figure(; figure...)
+    ax1 = Axis(fig[1,1], xlabel = "productivity, P [kg m⁻³ h⁻¹]", ylabel = "mean particle size, d₄₃ [μm]", 
+            aspect = 1, xticks = [10, 250:250:1500...], yticks = 0:150:1200, 
+            title = "Attainable region", axis1...)
+    ax2 = Axis(fig[1,2], aspect = 1, xlabel = "particle size L [μm]", 
+            ylabel = "L³n(L) × 10⁻⁴ [# μm⁻¹]", title = "Crystal size distribution", axis2...)
+    ax3 = Axis(fig[1,3], aspect = 1, xlabel = "temperature T [°C]", 
+            ylabel = "concentration [kg m⁻³]", title = "Operating policy", axis3...)
+
+    plt = scatter!(ax1, P*3600, d43*1e6, plot1...)
 
     (; solubility) = system
     ps, _, _ = __indexp(system)
@@ -197,9 +255,9 @@ function plotAttainableRegion_dynamic(system, conditions, d43, P; kws...)
     labels = [0 for i in 1:5]
 
     for i in 1:5
-        lines!(ax2, 1e6 .* L, nobs[i], color = Cycled(i))
-        scatter!(ax1, ARobs[i], color = Cycled(i), markersize = 10)
-        lines!(ax3, OPobs[i], color = Cycled(i))
+        lines!(ax2, 1e6 .* L, nobs[i], color = Cycled(i), plot2...)
+        scatter!(ax1, ARobs[i], color = Cycled(i), markersize = 10, plot2...)
+        lines!(ax3, OPobs[i], color = Cycled(i), plot2...)
     end
     xlims!(ax2, 0, 3000)
 
@@ -218,7 +276,7 @@ function plotAttainableRegion_dynamic(system, conditions, d43, P; kws...)
                 sol = solve(prob)
                 Tsat = sol.u
                 OPobs[counter][] = [Tsat T_i T_i; Cf_i Cf_i Css_i]
-                reset_limits!(ax2)        # recompute limits from all axis content
+                reset_limits!(ax2) # recompute limits from all axis content
                 notify(nobs[counter])
                 labels[counter] = i
 
@@ -237,11 +295,7 @@ function plotAttainableRegion_dynamic(system, conditions, d43, P; kws...)
                     end
                 end            
                 foreach(delete!, contents(fig[2,1:3]))
-                Legend(fig[2, 1:3],
-                    elem[2:end],
-                    labels2,
-                    patchsize = (35, 35), rowgap = 10, orientation = :horizontal, labelsize = 14,
-                    tellwidth = false)
+                Legend(fig[2, 1:3], elem[2:end], labels2, legend...)
             end
         end
         Consume(true)
