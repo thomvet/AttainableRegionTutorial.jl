@@ -130,7 +130,7 @@ function plotFitQuality(system, dataset; mode = :combined, ids = 1:length(datase
     fig = Figure(; figure...)
 
     if mode == :combined
-        ax = Axis(fig[1,1], axis..., xlabel = "particle size L [μm]", ylabel = "ln(n(L))") #we do not allow to overwrite axis labels.
+        ax = Axis(fig[1,1]; axis..., xlabel = "particle size L [μm]", ylabel = "ln(n(L))") #we do not allow to overwrite axis labels.
     end
     (; L, τ, T, Cf, n) = dataset
 
@@ -206,7 +206,7 @@ Information on valid attributes can be found in the [Makie.jl Documentation](htt
 """
 function plotAttainableRegion_dynamic(system, conditions, d43, P; figure = (fontsize = 24, 
         size = (1500, 900), figure_padding = 30), axis1 = (;), axis2 = (;), axis3 = (;), 
-        plot1 = (markersize = 3, color = :gray70), plot2 = (markersize = 3, color = :gray70),
+        plot1 = (markersize = 3, color = :gray70), plot2 = (;),
         legend = (patchsize = (35, 35), rowgap = 10, orientation = :horizontal, labelsize = 14,
             tellwidth = false))
     fig = Figure(; figure...)
@@ -218,7 +218,7 @@ function plotAttainableRegion_dynamic(system, conditions, d43, P; figure = (font
     ax3 = Axis(fig[1,3], aspect = 1, xlabel = "temperature T [°C]", 
             ylabel = "concentration [kg m⁻³]", title = "Operating policy", axis3...)
 
-    plt = scatter!(ax1, P*3600, d43*1e6, plot1...)
+    plt = scatter!(ax1, P*3600, d43*1e6; plot1...)
 
     (; solubility) = system
     ps, _, _ = __indexp(system)
@@ -255,9 +255,9 @@ function plotAttainableRegion_dynamic(system, conditions, d43, P; figure = (font
     labels = [0 for i in 1:5]
 
     for i in 1:5
-        lines!(ax2, 1e6 .* L, nobs[i], color = Cycled(i), plot2...)
-        scatter!(ax1, ARobs[i], color = Cycled(i), markersize = 10, plot2...)
-        lines!(ax3, OPobs[i], color = Cycled(i), plot2...)
+        lines!(ax2, 1e6 .* L, nobs[i]; color = Cycled(i), plot2...)
+        scatter!(ax1, ARobs[i]; color = Cycled(i), markersize = 10, plot2...)
+        lines!(ax3, OPobs[i]; color = Cycled(i), plot2...)
     end
     xlims!(ax2, 0, 3000)
 
@@ -295,7 +295,7 @@ function plotAttainableRegion_dynamic(system, conditions, d43, P; figure = (font
                     end
                 end            
                 foreach(delete!, contents(fig[2,1:3]))
-                Legend(fig[2, 1:3], elem[2:end], labels2, legend...)
+                Legend(fig[2, 1:3], elem[2:end], labels2; legend...)
             end
         end
         Consume(true)

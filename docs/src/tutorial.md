@@ -65,7 +65,7 @@ Figure()
 
 ![REPL Output showing the datasets](assets/Tutorial_CSDs_separate.png)
 
-
+```jldoctest tutorial; output = false
 #Do parameter estimation
 estsystem = estimateParameters(system, dataset)
 
@@ -77,11 +77,21 @@ fig3 = plotFitQuality(estsystem, dataset, ids = [1,4,6,10],
 #Or plot all data
 fig4 = plotFitQuality(estsystem, dataset, mode = :separate, fontsize = 20, figure_padding = 30)
 
+# output
+
+```
+
+```jldoctest tutorial; output = false
 #Generate data for the attainable region
-conditions, d43, P = generateAttainableRegion(estsystem)
+conditions, d43, P = generateAttainableRegion(estsystem, npointstemperature = 50, npointsfeedconc = 50,
+        npointsresidencetime = 50)
 
 #Plot attainable region
 #static plot for the tutorial.
 
 #dynamic plot for exploring
-fig5 = plotAttainableRegion_dynamic(system, conditions, d43, P, fontsize = 24, size = (1500, 900), figure_padding = 30)
+fig5 = plotAttainableRegion_dynamic(system, conditions, d43, P)
+
+# output
+Figure()
+```
