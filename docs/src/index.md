@@ -34,3 +34,7 @@ Alternatively, you could navigate to a desired folder using `cd(path/to/folder)`
 environment).
 
 More information on environments and package management in Julia can be found [here](https://docs.julialang.org/en/v1/stdlib/Pkg/).
+
+# License
+
+AttainableRegionTutorial.jl is published under the [MIT license](https://github.com/thomvet/AttainableRegionTutorial.jl/blob/main/LICENSE). See also the corresponding [Wikpedia article](https://en.wikipedia.org/wiki/MIT_License). 
