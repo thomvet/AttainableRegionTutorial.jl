@@ -4,6 +4,17 @@ CurrentModule = AttainableRegionTutorial
 
 # Book tutorial
 
+In this tutorial we will detail how attainable regions can be computed for a single mixed 
+suspension mixed product removal crystallizer. 
+
+We start out by defining a description of the "system" we are crystallizing. This includes 
+defining material constants, such as the crystal density and the volumetric shape factor, as 
+well as defining an expression of the solubility against temperture and the kinetics of 
+nucleation and crystal growth.
+
+As outlined in the book chapter, we will use 
+[Power et al. (2015)](https://www.sciencedirect.com/science/article/abs/pii/S0009250915001207)
+
 ```jldoctest tutorial; output = false
 using AttainableRegionTutorial
 
@@ -64,6 +75,8 @@ Figure()
 ```
 
 ![REPL Output showing the datasets](assets/Tutorial_CSDs_separate.png)
+
+We will now estimate the kinetic parameters from the dataset. For this
 
 ```jldoctest tutorial; output = false
 #Do parameter estimation
