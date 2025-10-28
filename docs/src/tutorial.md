@@ -81,6 +81,9 @@ fig4 = plotFitQuality(estsystem, dataset, mode = :separate, fontsize = 20, figur
 
 ```
 
+![Image showing data fit quality in combined plot](assets/Tutorial_FitQuality.png)
+
+
 ```jldoctest tutorial; output = false
 #Generate data for the attainable region
 conditions, d43, P = generateAttainableRegion(estsystem, npointstemperature = 50, npointsfeedconc = 50,
