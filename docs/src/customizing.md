@@ -2,5 +2,8 @@
 CurrentModule = AttainableRegionTutorial
 ```
 
-# Adaptations from the book tutorial
+# Supplying custom kinetics and thermodynamics
+
+
+# Tuning parameter estimation
 

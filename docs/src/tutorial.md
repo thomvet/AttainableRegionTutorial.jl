@@ -5,7 +5,9 @@ CurrentModule = AttainableRegionTutorial
 # Book tutorial
 
 In this tutorial we will detail how attainable regions can be computed for a single mixed 
-suspension mixed product removal crystallizer. 
+suspension mixed product removal crystallizer at steady state. The population balance 
+equation describing the crystal size distribution in this case can be written as:
+
 
 We start out by defining a description of the "system" we are crystallizing. This includes 
 defining material constants, such as the crystal density and the volumetric shape factor, as 
@@ -14,6 +16,9 @@ nucleation and crystal growth.
 
 As outlined in the book chapter, we will use 
 [Power et al. (2015)](https://www.sciencedirect.com/science/article/abs/pii/S0009250915001207)
+
+
+[Supplying custom kinetics and thermodynamics](@ref)
 
 ```jldoctest tutorial; output = false
 using AttainableRegionTutorial
@@ -58,7 +63,7 @@ fig = plotCSDs(dataset, system, ids = [1,4,6,10], figure = (fontsize = 20,
     figure_padding = 30))
 
 # output
-Figure()
+
 ```
 
 ```@raw html
@@ -71,12 +76,14 @@ fig2 = plotCSDs(dataset, system, mode = :separate, figure = (fontsize = 20,
     figure_padding = 30))
 
 # output
-Figure()
+
 ```
 
 ![REPL Output showing the datasets](assets/Tutorial_CSDs_separate.png)
 
-We will now estimate the kinetic parameters from the dataset. For this
+We will now estimate the kinetic parameters from the dataset. For this purpose, we are using 
+the function `estimate_parameters()`. We will run this with the default values in this case,
+but see the page [Tuning parameter estimation](@ref)
 
 ```jldoctest tutorial; output = false
 #Do parameter estimation
