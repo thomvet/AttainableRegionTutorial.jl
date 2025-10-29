@@ -15,10 +15,12 @@ makedocs(;
         canonical="https://github.com/thomvet/AttainableRegionTutorial.jl",
         edit_link="main",
         assets=String[],
+        size_threshold = nothing,
     ),
     pages=[
         "Home" => "index.md",
         "Tutorial" => "tutorial.md",
+        "How it works" => "howitworks.md",
         "Customizing" => "customizing.md",
         "Reference" => "reference.md"
     ],
