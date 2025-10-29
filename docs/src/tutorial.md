@@ -2,12 +2,30 @@
 CurrentModule = AttainableRegionTutorial
 ```
 
-# Book tutorial
+# Background: Mixed Suspension Mixed Product Removal Crystallizer Model
 
 In this tutorial we will detail how attainable regions can be computed for a single mixed 
-suspension mixed product removal crystallizer at steady state. The population balance 
-equation describing the crystal size distribution in this case can be written as:
+suspension mixed product removal (MSMPR) crystallizer at steady state. The population balance 
+equation describing the crystal size distribution in an MSMPR crystallizer governed by 
+nucleation and growth can be written as:
+```math
+\frac{\partial n(L,t)}{\partial t} = -\frac{\partial G(S,T)n(L,t)}{\partial L} - \frac{n(L,t)}{\tau}
+```
+where ``n(L,t)`` is the crystal size distribution, such that ``n(L,t)\mathrm{d}L`` is the 
+number of crystals with sizes between ``L`` and ``L+\mathrm{d}L`` per volume of solution 
+(it therefore has units of ``[m]^{-4}``). ``t`` is time, ``L`` is crystal size, ``G(S,T)`` 
+is the supersaturation- (``S``) and temperature-dependent (``T``) growth rate 
+(in ``[m s^{-1}]``) and ``\tau`` is the mean residence time of the crystallizer (determined 
+by the ratio of the volume of solution inside the crystallizer, ``V``, and the flow rate of 
+the particle-free inlet, ``Q`` [m^3 s^{-1}``]). With the typical assumption that nucleation 
+occurs at negligibly small particle size (treated as ``L=0``), a boundary condition 
+``n(L=0,t) = J(S,T,M_\mathrm{T})/G(S,T)`` completes the description of the crystal phase in 
+the crystallizer.
 
+At steady state and with a growth rate that is not size-dependent, this becomes:
+```math
+0 = -G(S,T)\frac{\mathrm{d} n(L,t)}{\mathrm{d} L} - \frac{n(L,t)}{\tau}
+```
 
 We start out by defining a description of the "system" we are crystallizing. This includes 
 defining material constants, such as the crystal density and the volumetric shape factor, as 
@@ -98,7 +116,7 @@ fig3 = plotFitQuality(estsystem, dataset, ids = [1,4,6,10],
 fig4 = plotFitQuality(estsystem, dataset, mode = :separate, fontsize = 20, figure_padding = 30)
 
 # output
-
+Figure()
 ```
 
 ![Image showing data fit quality in combined plot](assets/Tutorial_FitQuality.png)
