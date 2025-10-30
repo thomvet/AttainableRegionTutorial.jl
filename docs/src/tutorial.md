@@ -86,7 +86,7 @@ and are meant to provide a quick overview of the CSDs contained within the datas
 depicted to scale, i.e., broader distributions have lower peaks and lower areas below the 
 curves represent lower suspension densities.
 
-![REPL Output showing the datasets](assets/Tutorial_Dataset.png)
+![REPL Output showing the datasets](./assets/Tutorial_Dataset.png)
 
 While nice, we may want to have some more professional looking plots of the CSDs. We first 
 recreate the figure depicting the CSDs as shown in the book chapter.
@@ -107,7 +107,7 @@ fig2 = plotCSDs(dataset, system, mode = :separate, figure = (fontsize = 20,
     figure_padding = 30))
 ```
 
-![REPL Output showing the datasets](assets/Tutorial_CSDs_separate.png)
+![REPL Output showing the datasets](./assets/Tutorial_CSDs_separate.png)
 
 ## Estimating parameters: fitting a model to the synthetic data
 We will now estimate the kinetic parameters from the dataset. For this purpose, we are using 
@@ -148,7 +148,7 @@ fig3 = plotFitQuality(estsystem, dataset, ids = [1,4,6,10], mode = :combined,
     axislegend = false)
 ```
 
-![Image showing data fit quality in combined plot](assets/Tutorial_FitQuality.png)
+![Image showing data fit quality in combined plot](./assets/Tutorial_FitQuality.png)
 
 ```julia
 #Or plot all data
