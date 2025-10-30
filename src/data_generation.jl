@@ -26,11 +26,11 @@ growthrate = FunctionalExpression(g, 3) #3 parameters occur in g
 # Example 2: Nucleation rate definitions
 
 ```
-b1 = (S, M, p) -> p[1] * S^p[2] * M^p[3] 
+b1 = (S, T, M, p) -> p[1] * S^p[2] * M^p[3] 
 nucleationrate1 = FunctionalExpression(b1, 3) #3 parameters occur in b
 ```
 ```
-b2 = (S, M, p) -> p[1] * S^p[2]
+b2 = (S, T, M, p) -> p[1] * S^p[2]
 nucleationrate2 = FunctionalExpression(b2, 2) 
 ```
 Note that function signature must be maintained despite `M` not appearing on r.h.s. of `b2`.
@@ -54,7 +54,7 @@ function (x::FunctionalExpression)(y...)
 end
 
 #Predefined kinetics and solubility as per tutorial
-B(S, M, p) = p[1] * S^p[2] * M^p[3] #nucleation rate [m⁻³ s ⁻¹]
+B(S, T, M, p) = p[1] * S^p[2] * M^p[3] #nucleation rate [m⁻³ s ⁻¹]
 G(S, T, p) = p[1] * S^p[2] * exp(- p[3] / 8.31441 / (T+273.15)) #crystal growth rate [m/s]
 Cstar(T, p) = 3.79e-2*T^2 + 3.77e-1*T + 2.07e1 #solubility [kg/m^3] against temperature [C]
 
@@ -69,7 +69,7 @@ $FIELDS
 ## Constructors
 
 ```
-b = (S, M, p) -> p[1] * S^p[2] * M^p[3]
+b = (S, T, M, p) -> p[1] * S^p[2] * M^p[3]
 g = (S, T, p) -> p[1] * S^p[2] * exp(- p[3] / 8.31441 / (T+273.15))
 cstar = (T,p) -> 3.79e-2*T^2 + 3.77e-1*T + 2.07e1
 SystemSpecification(; crystaldensity = 1200.0,
@@ -88,11 +88,11 @@ SystemSpecification(; crystaldensity = 1200.0,
     shapefactor::Float64 = pi/6
     "Solubility function [kg m⁻³]"
     solubility::F1 = FunctionalExpression(Cstar, 0)
-    "Growth rate  [m s ⁻¹]"
+    "Growth rate  [m s⁻¹]"
     growthrate::F2 = FunctionalExpression(G, 3)
-    "Nucleation rate [kg m⁻³]"
+    "Nucleation rate [m⁻³ s⁻¹]"
     nucleationrate::F3 = FunctionalExpression(B, 3)
-    "Vector of parameters occuring in the growth and nucleation rates"
+    "Vector of parameters occuring in solubility function and growth and nucleation rates"
     parameters::Vector{Float64} = [3.34e-4, 1.1, 1.44e4, 3e5, 2.0, 1.6]
 end
 

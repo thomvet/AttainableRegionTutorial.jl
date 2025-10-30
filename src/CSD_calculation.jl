@@ -69,7 +69,7 @@ function simulateCSD(L, τ, T, Cf, system)
     #Calculate CSD
     M = Cf - Css
     S = log(Css/cstar)
-    b = nucleationrate(S, M, pn)
+    b = nucleationrate(S, T, M, pn)
     g = growthrate(S, T, pg)
     n = b./g.*exp.(-L./g./τ)
     d43 = 4*g*τ #comes from analytical solution of PBE
