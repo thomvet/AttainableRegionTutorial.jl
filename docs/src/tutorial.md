@@ -45,6 +45,10 @@ where ``C_\mathrm{f}`` is the feed concentration, TODO ETC.
 M_\mathrm{t} = k_\mathrm{v}\rho_\mathrm{c}\int\limits_0^\infty L^3 n(L) \mathrm{d} L 
 ```
 
+## Overview
+The tutorial proceeds in a step-wise fashion th
+
+## Generation of synthetic data using a specified model
 
 We start out by defining a description of the "system" we are crystallizing. This includes 
 defining material constants, such as the crystal density and the volumetric shape factor, as 
@@ -57,75 +61,73 @@ As outlined in the book chapter, we will use
 
 [Supplying custom kinetics and thermodynamics](@ref)
 
-```@example tutorial
+```julia
 using AttainableRegionTutorial
 
 #Initialize System
 system = SystemSpecification()
-nothing #hide
 ```
 
 ```@raw html
 <img src="../assets/Tutorial_SystemSpecification.png" alt="REPL Output showing the default system specification used in the tutorial" width="310"/>
 ```
 
-```@example tutorial
+```julia
 #generate dataset
 residencetimes = [15.0, 20.0, 30.0, 60.0, 30.0, 50.0, 60.0, 80.0, 40.0, 40.0].*60 #converted to seconds
 temperatures = [20.0, 20.0, 20.0, 20.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0]
 feedconcentrations = [100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 80.0, 60.0]
 dataset = Dataset(residencetimes, temperatures, feedconcentrations, system)
-nothing #hide
 ```
+
 After executing the last command, you will see a summary of the dataset, as shown below. 
 Note that the Unicode ("dot") plots show volume-weighted crystal size distributions (CSDs) 
 and are meant to provide a quick overview of the CSDs contained within the dataset. They are 
 depicted to scale, i.e., broader distributions have lower peaks and lower areas below the 
 curves represent lower suspension densities.
 
-![REPL Output showing the datasets](../assets/Tutorial_Dataset.png)
+![REPL Output showing the datasets](assets/Tutorial_Dataset.png)
 
 While nice, we may want to have some more professional looking plots of the CSDs. We first 
 recreate the figure depicting the CSDs as shown in the book chapter.
 
-```@example tutorial
+```julia
 #make plot of data
 #Re-create tutorial figure 
 fig = plotCSDs(dataset, system, ids = [1,4,6,10])
-nothing #hide
 ```
 
 ```@raw html
 <img src="../assets/Tutorial_CSDs_combined.png" alt="REPL Output showing the CSDs in a combined plot" width="466"/>
 ```
 
-```@example tutorial
+```julia
 #Now plot all the data in separate plots
 fig2 = plotCSDs(dataset, system, mode = :separate, figure = (fontsize = 20, 
     figure_padding = 30))
-nothing #hide
 ```
 
-![REPL Output showing the datasets](../assets/Tutorial_CSDs_separate.png)
+![REPL Output showing the datasets](assets/Tutorial_CSDs_separate.png)
 
+## Estimating parameters: fitting a model to the synthetic data
 We will now estimate the kinetic parameters from the dataset. For this purpose, we are using 
 the function `estimateParameters()`. We will run this with the default values in this case,
 but see the page [Tuning parameter estimation](@ref) for ways to tune the parameter 
 estimation procedure. Also consult the docstring of the `estimateParameters` function by 
 writing `?estimateParameters` in your Julia session.
 
-```@setup tutorial 
-estsystem = estimateParameters(system, dataset)
-```
-
 ```julia
 estsystem = estimateParameters(system, dataset)
+conditions, d43, P = generateAttainableRegion(estsystem, npointstemperature = 50, npointsfeedconc = 50,
+        npointsresidencetime = 50)
 ```
 `estsystem` should be a new system specification that contains the estimated parameters, which 
 will be shown in the Julia session. It should look like this:
 ```@raw html
-<img src="../assets/Tutorial_EstimatedSystem.png" alt="REPL Output showing the default system specification used in the tutorial" width="310"/>
+<img src="../assets/Tutorial_EstimatedSystem.png" alt="REPL Output showing the system 
+specification after parameter estimation" width="310"/>
 ```
+
 Note that the precise values may be slightly different based on the optimizer used when 
 estimating the parameters and also on the precise noise added when generating the dataset 
 above.
@@ -139,37 +141,60 @@ These are nothing to be concerned about. They stem for the particular way the ro
 problem required to solve the PBE and mass balance together is implemented. For a deeper 
 explanation, see [Solving root finding problem](@ref)
 
-```@example tutorial
+```julia
 #Plot quality of fit
 #Re-create tutorial figure 
 fig3 = plotFitQuality(estsystem, dataset, ids = [1,4,6,10], mode = :combined, 
     axislegend = false)
-nothing #hide
 ```
 
+![Image showing data fit quality in combined plot](assets/Tutorial_FitQuality.png)
+
+```julia
 #Or plot all data
 fig4 = plotFitQuality(estsystem, dataset, mode = :separate)
+```
 
-![Image showing data fit quality in combined plot](../assets/Tutorial_FitQuality.png)
+TODO: insert plot with the separate fit qualities.
 
+## Generating an attainable region
+We can now proceed to populate the attainable region by varying process conditions. The 
+`generateAttainableRegion` function allows to do this in an easy manner. Specifically, we 
+vary the temperature in the crystallizer, the feed concentration, as well as the residence 
+time. By default, the function selects reasonable ranges for these values for this case 
+study. More information on this can be obtained by typing `?generateAttainableRegion` in the 
+Julia session or by considering the relevant page in the documentation [generateAttainableRegion](@ref). 
+The function will return volume-weighted mean particle sizes at each operating point, `d43` 
+in [m], as well as productivity values `P` in [``\mathrm{kg} \mathrm{m}^{-3} \mathrm{s}^{-1}``].
 
-```@example tutorial
+```julia
 #Generate data for the attainable region
 conditions, d43, P = generateAttainableRegion(estsystem, npointstemperature = 50, npointsfeedconc = 50,
         npointsresidencetime = 50)
-
-#Plot attainable region
-#static plot for the tutorial.
-
-#dynamic plot for exploring
-fig5 = plotAttainableRegion_dynamic(system, conditions, d43, P)
-nothing #hide
 ```
 Note that we have intentionally reduced the number of points investigated, so that the code 
 finishes running quicker. The output in the book chapter was generated using ``200 \times 200 \times 200`` 
-points. `fig5` is an interactive figure. By left-clicking on specific points in the attainable 
+points. 
+
+We can now plot all attainable combinations of mean particle sizes against productivity 
+values in a static plot.
+
+```julia
+#Plot attainable region
+#static plot for the tutorial.
+```
+
+In order to explore which operating condition generates which point in the attainable region, 
+there is a dynamic analysis tool available:
+```julia
+#dynamic plot for exploring
+fig6 = plotAttainableRegion_dynamic(system, conditions, d43, P)
+```
+
+`fig6` is an interactive figure. By left-clicking on specific points in the attainable 
 (left) region plot, the volume-weighted CSD and the operating policy generating it are 
 displayed in the middle and right plot, respetively. Multiple points can be compared using 
-multiple left-clicks. The functionality is showcased in the video below:
+multiple left-clicks (up to a maximum of 5 - more clicks result in previously selecting point 
+getting deselected). The functionality is showcased in the video below:
 
 TODO: insert video showing the dynamic functionality

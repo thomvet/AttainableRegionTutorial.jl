@@ -1,3 +1,14 @@
+"""
+```
+generateAttainableRegion(system; temperaturerange = (5.0, 75.0), 
+        feedconcrange = nothing,
+        residencetimerange = (600.0, 36000.0), npointstemperature = 200, npointsfeedconc = 200,
+        npointsresidencetime = 200)
+```
+
+TODO: complete docstring.
+
+"""
 function generateAttainableRegion(system; temperaturerange = (5.0, 75.0), 
         feedconcrange = nothing,
         residencetimerange = (600.0, 36000.0), npointstemperature = 200, npointsfeedconc = 200,
