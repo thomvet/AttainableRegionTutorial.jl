@@ -22,7 +22,7 @@ by the ratio of the volume of solution inside the crystallizer, ``V``, and the f
 the particle-free inlet, ``Q`` [``m^3 s^{-1}``]). With the typical assumption that nucleation 
 occurs at negligibly small particle size (treated as ``L=0``), a boundary condition 
 ``n(L=0,t) = J(S,T,M_\mathrm{T})/G(S,T)`` completes the description of the crystal phase in 
-the crystallizer.
+the crystallizer. ``M_\mathrm{T}`` is the magma/suspension density in [kg m``^{-3}``].
 
 At steady state and with a growth rate that is not size-dependent, this becomes:
 ```math
@@ -39,7 +39,8 @@ the overall mass balance:
 ```math
 C_\mathrm{f} = M_\mathrm{t} + C_\mathrm{ss} 
 ```
-where ``C_\mathrm{f}`` is the feed concentration, TODO ETC.
+where ``C_\mathrm{f}`` is the feed concentration and ``C_\mathrm{ss}`` is the steady state 
+concentration, both in [kg m``^{-3}``].
 
 ```math
 M_\mathrm{t} = k_\mathrm{v}\rho_\mathrm{c}\int\limits_0^\infty L^3 n(L) \mathrm{d} L 
