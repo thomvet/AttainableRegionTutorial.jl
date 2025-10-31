@@ -27,7 +27,7 @@ include("parameter_estimation.jl")
 include("attainable_region_generation.jl")
 include("plotting.jl")
 
-export SystemSpecification, Dataset, estimateParameters, generateAttainableRegion
-export plotCSDs, plotFitQuality, plotAttainableRegion_dynamic
+export SystemSpecification, Dataset, FunctionalExpression, estimate_parameters
+export generate_attainable_region, plot_CSDs, plot_fit_quality, plot_attainable_region_dynamic
 
 end

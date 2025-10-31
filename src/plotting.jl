@@ -1,7 +1,7 @@
 #CSD plots 
 """
 ```
-plotCSDs(dataset, system = nothing; ids = 1:length(dataset.T), mode = :combined, 
+plot_CSDs(dataset, system = nothing; ids = 1:length(dataset.T), mode = :combined, 
         figure = (fontsize = 20, figure_padding = 30), axis = (;), plot = (;))
 ```
 
@@ -19,7 +19,7 @@ Figure, Axis and Plot properties can be freely adjusted by providing the keyword
 `axis`, and `plot` with a named tuple, e.g., `figure = (fontsize = 20, figure_padding = 30)`. 
 Informatoin on valid attributes can be found in the [Makie.jl Documentation](https://docs.makie.org/dev/). 
 """
-function plotCSDs(dataset, system = nothing; ids = 1:length(dataset.T), mode = :combined, 
+function plot_CSDs(dataset, system = nothing; ids = 1:length(dataset.T), mode = :combined, 
         figure = (fontsize = 20, figure_padding = 30), axis = (;), plot = (;), 
         axislegend = (framevisible = false, position = :rt))
     fig = Figure(; figure...)
@@ -69,7 +69,7 @@ function plotCSDs(dataset, system = nothing; ids = 1:length(dataset.T), mode = :
         #means dividing by the numbers by 1e6, then we bring them on a nicer intervall by 
         #multiplying with 1e4.
         if isa(system, SystemSpecification)
-            nsim, _ = simulateCSD(L, τ[val], T[val], Cf[val], system)
+            nsim, _ = simulate_CSD(L, τ[val], T[val], Cf[val], system)
             lines!(ax, 1e6.*L, L.^3 ./1e6 .*nsim*1e4; color = colors[val], plot...)
         end
         c = @sprintf "Dataset %2.0f" val
@@ -93,7 +93,7 @@ end
 
 """
 ```
-plotFitQuality(system, dataset; mode = :combined, ids = 1:length(dataset.T), 
+plot_fit_quality(system, dataset; mode = :combined, ids = 1:length(dataset.T), 
         figure = (fontsize = 20, figure_padding = 30), 
         axis = (xticks = 0:400:2000, yticks = 0:5:35, aspect = 1, limits = (0, 2000, 15, 35)), 
         plot = (;), 
@@ -104,9 +104,9 @@ Produces a plot that compares shows quality of fit by comparing simulated CSDs w
 respective dataset on a logarithmic scale. Data are plotted as points while model outputs 
 are shown as lines.
 
-`dataset` contains the data to be plotted. `system` contains the kinetic para, the plot will also include 
-the model output as comparison to the data. `ids` can be used to specify which datasets are 
-included in the plot.
+`dataset` contains the data to be plotted. `system` contains the kinetic para, the plot will 
+also include the model output as comparison to the data. `ids` can be used to specify which 
+datasets are included in the plot.
 
 For `mode = :combined` all selected datasets will be shown in a single subfigure whereas 
 `mode = :separate` plots each CSD in its own subfigure. 
@@ -115,7 +115,7 @@ Figure, Axis and Plot properties can be freely adjusted by providing the keyword
 `axis`, and `plot` with a named tuple, e.g., `figure = (fontsize = 20, figure_padding = 30)`. 
 Information on valid attributes can be found in the [Makie.jl Documentation](https://docs.makie.org/dev/). 
 """
-function plotFitQuality(system, dataset; mode = :combined, ids = 1:length(dataset.T), 
+function plot_fit_quality(system, dataset; mode = :combined, ids = 1:length(dataset.T), 
         figure = (fontsize = 20, figure_padding = 30), axis = (xticks = 0:400:2000, yticks = 0:5:35,
             aspect = 1, limits = (0, 2000, 15, 35)), plot = (;), 
         axislegend = (position = :rt, framevisible = false))
@@ -160,7 +160,7 @@ function plotFitQuality(system, dataset; mode = :combined, ids = 1:length(datase
             end
         end
 
-        nfiti, Cssi, d43i = simulateCSD(L, τi, Ti, Cfi, system)
+        nfiti, Cssi, d43i = simulate_CSD(L, τi, Ti, Cfi, system)
 
         if mode != :combined
             ax = Axis(fig[r,c]; title = "Dataset $val", ylabelvisible = ylabelvisible, 
@@ -185,7 +185,7 @@ end
 
 """
 ```
-plotAttainableRegion_dynamic(system, conditions, d43, P; figure = (fontsize = 24, 
+plot_attainable_region_dynamic(system, conditions, d43, P; figure = (fontsize = 24, 
     size = (1500, 900), figure_padding = 30), axis = (;), plot = (;))
 ```
 
@@ -204,7 +204,7 @@ Figure, Axis and Plot properties can be freely adjusted by providing the keyword
 `axis`, and `plot` with a named tuple, e.g., `figure = (fontsize = 20, figure_padding = 30)`. 
 Information on valid attributes can be found in the [Makie.jl Documentation](https://docs.makie.org/dev/). 
 """
-function plotAttainableRegion_dynamic(system, conditions, d43, P; figure = (fontsize = 24, 
+function plot_attainable_region_dynamic(system, conditions, d43, P; figure = (fontsize = 24, 
         size = (1500, 900), figure_padding = 30), axis1 = (;), axis2 = (;), axis3 = (;), 
         plot1 = (markersize = 3, color = :gray70), plot2 = (;),
         legend = (patchsize = (35, 35), rowgap = 10, orientation = :horizontal, labelsize = 14,
@@ -269,7 +269,7 @@ function plotAttainableRegion_dynamic(system, conditions, d43, P; figure = (font
                 Cf_i = conditions[1,i]
                 tau_i = conditions[2,i]
                 T_i = conditions[3,i]
-                n_i, Css_i, d43_i = simulateCSD(L, tau_i, T_i, Cf_i, system)
+                n_i, Css_i, d43_i = simulate_CSD(L, tau_i, T_i, Cf_i, system)
                 nobs[counter][] = L.^3 .* n_i ./1e6 .* 1e4
                 ARobs[counter][] = Point2(P[i]*3600, d43[i]*1e6)
                 prob = IntervalNonlinearProblem((T, p) -> system.solubility(T, ps) - Cf_i, extrema(Trange)) 

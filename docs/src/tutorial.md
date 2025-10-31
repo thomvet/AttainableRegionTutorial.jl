@@ -4,25 +4,35 @@ CurrentModule = AttainableRegionTutorial
 
 # Tutorial
 
-## Background: Mixed Suspension Mixed Product Removal Crystallizer Model
-
+## Overview
 In this tutorial we will detail how attainable regions can be computed for a single mixed 
-suspension mixed product removal (MSMPR) crystallizer at steady state. The population balance 
-equation describing the crystal size distribution in an MSMPR crystallizer governed by 
-nucleation and growth can be written as:
+suspension mixed product removal (MSMPR) crystallizer at steady state. For the sake of 
+simplicity, we will do this based on synthetic data, though originating from case study 
+published by [Power et al. (2015)](https://www.sciencedirect.com/science/article/abs/pii/S0009250915001207)
+
+We proceed by the following steps:
+* Background on the MSMPR crystallizer model
+* Specification of model solubility, kinetics and material constants and generation of synthetic data
+* Parameter estimation
+* Generating the attainable region and exploring it
+
+## Background: Mixed Suspension Mixed Product Removal Crystallizer Model
+ The population balance equation describing the crystal size distribution in an MSMPR 
+crystallizer governed by nucleation and growth can be written as:
 ```math
 \frac{\partial n(L,t)}{\partial t} = -\frac{\partial G(S,T)n(L,t)}{\partial L} - \frac{n(L,t)}{\tau}
 ```
 where ``n(L,t)`` is the crystal size distribution, such that ``n(L,t)\mathrm{d}L`` is the 
 number of crystals with sizes between ``L`` and ``L+\mathrm{d}L`` per volume of solution 
-(it therefore has units of ``[m^{-4}]``). ``t`` is time, ``L`` is crystal size, ``G(S,T)`` 
+(it therefore has units of [m``^{-4}``]). ``t`` is time, ``L`` is crystal size, ``G(S,T)`` 
 is the supersaturation- (``S``) and temperature-dependent (``T``) growth rate 
-(in ``[m s^{-1}]``) and ``\tau`` is the mean residence time of the crystallizer (determined 
+(in [m s``^{-1}``]) and ``\tau`` is the mean residence time of the crystallizer (determined 
 by the ratio of the volume of solution inside the crystallizer, ``V``, and the flow rate of 
-the particle-free inlet, ``Q`` [``m^3 s^{-1}``]). With the typical assumption that nucleation 
+the particle-free inlet, ``Q`` [m``^3`` s``^{-1}``]). With the typical assumption that nucleation 
 occurs at negligibly small particle size (treated as ``L=0``), a boundary condition 
-``n(L=0,t) = J(S,T,M_\mathrm{T})/G(S,T)`` completes the description of the crystal phase in 
-the crystallizer. ``M_\mathrm{T}`` is the magma/suspension density in [kg m``^{-3}``].
+``n(L=0,t) = B(S,T,M_\mathrm{T})/G(S,T)`` completes the description of the crystal phase in 
+the crystallizer. ``B(S,T,M_\mathrm{T})`` is the nucleation rate in [m``^{-3}`` s``^{-1}``] 
+and ``M_\mathrm{T}`` is the magma/suspension density in [kg m``^{-3}``].
 
 At steady state and with a growth rate that is not size-dependent, this becomes:
 ```math
@@ -31,34 +41,47 @@ At steady state and with a growth rate that is not size-dependent, this becomes:
 This is a separable first order differential equation and thus can be directly solved to 
 obtain:
 ```math
-n(L) = \frac{J(S,T,M_\mathrm{T})}{G(S,T)}\exp\left(-\frac{L}{G\tau}\right)
+n(L) = \frac{B(S,T,M_\mathrm{T})}{G(S,T)}\exp\left(-\frac{L}{G\tau}\right)
 ```
-The nucleation and growth rates need to be calculated at the steady state concentration in 
-the crystallizer. This couples the liquid phase and the crystalline phase to each other via
-the overall mass balance:
+We define the supersaturation, ``S`` as:
 ```math
-C_\mathrm{f} = M_\mathrm{t} + C_\mathrm{ss} 
+S = \ln \left(\frac{C_\mathrm{ss}}{C_\star(T)}\right)
+```
+where ``C_\star(T)`` is the solubility. Therefore, the nucleation and growth rates need to 
+be calculated at the steady state concentration in the crystallizer. This couples the liquid 
+phase and the crystalline phase to each other via the overall mass balance:
+```math
+C_\mathrm{f} = M_\mathrm{T} + C_\mathrm{ss} 
 ```
 where ``C_\mathrm{f}`` is the feed concentration and ``C_\mathrm{ss}`` is the steady state 
-concentration, both in [kg m``^{-3}``].
-
+concentration, both in [kg m``^{-3}``]. The suspension density can be calculated from the 
+steady state crystal size distribution:
 ```math
-M_\mathrm{t} = k_\mathrm{v}\rho_\mathrm{c}\int\limits_0^\infty L^3 n(L) \mathrm{d} L 
+\begin{align}
+M_\mathrm{T} &=&& k_\mathrm{v}\rho_\mathrm{c}\int\limits_0^\infty L^3 n(L) \mathrm{d} L \\
+             &=&& k_\mathrm{v}\rho_\mathrm{c}\int\limits_0^\infty L^3 \frac{B(S,T,M_\mathrm{T})}{G(S,T)}\exp\left(-\frac{L}{G\tau}\right) \mathrm{d} L \\
+             &=&& 6k_\mathrm{v}\rho_\mathrm{c} τ^4 B G^3 
+\end{align} 
 ```
+where ``\rho_\mathrm{c}`` is the density of the crystals in [kg m``^{-3}``] and ``k_\mathrm{v}`` 
+is the volume shape factor of the crystals, defined so that ``V_\mathrm{c} = k_\mathrm{v}L^3`` 
+where ``V_\mathrm{c}`` is the volume of a crystal with characteristic size ``L``. This means, 
+for example, that ``k_\mathrm{v} = 1`` for cubes with side length ``L``, 
+``k_\mathrm{v} = \pi/6`` for spheres of diameter ```L``, 
+``k_\mathrm{v} = \left(6\sqrt{2}\right)^{-1}`` for regular tetrahedra with edge length 
+``L``, etc.
 
-## Overview
-The tutorial proceeds in a step-wise fashion th
+See [Solving root finding problem](@ref) for details on how AttainableRegionTutorial.jl 
+solves the mass balance and population balance equation numerically.
 
 ## Generation of synthetic data using a specified model
 
 We start out by defining a description of the "system" we are crystallizing. This includes 
 defining material constants, such as the crystal density and the volumetric shape factor, as 
-well as defining an expression of the solubility against temperture and the kinetics of 
+well as defining an expression of the solubility against temperature and the kinetics of 
 nucleation and crystal growth.
 
 As outlined in the book chapter, we will use 
-[Power et al. (2015)](https://www.sciencedirect.com/science/article/abs/pii/S0009250915001207)
-
 
 [Supplying custom kinetics and thermodynamics](@ref)
 
@@ -75,10 +98,10 @@ system = SystemSpecification()
 
 ```julia
 #generate dataset
-residencetimes = [15.0, 20.0, 30.0, 60.0, 30.0, 50.0, 60.0, 80.0, 40.0, 40.0].*60 #converted to seconds
+residence_times = [15.0, 20.0, 30.0, 60.0, 30.0, 50.0, 60.0, 80.0, 40.0, 40.0].*60 #converted to seconds
 temperatures = [20.0, 20.0, 20.0, 20.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0]
-feedconcentrations = [100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 80.0, 60.0]
-dataset = Dataset(residencetimes, temperatures, feedconcentrations, system)
+feed_concentrations = [100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 80.0, 60.0]
+dataset = Dataset(residence_times, temperatures, feed_concentrations, system)
 ```
 
 After executing the last command, you will see a summary of the dataset, as shown below. 
@@ -95,7 +118,7 @@ recreate the figure depicting the CSDs as shown in the book chapter.
 ```julia
 #make plot of data
 #Re-create tutorial figure 
-fig = plotCSDs(dataset, system, ids = [1,4,6,10])
+fig = plot_CSDs(dataset, system, ids = [1,4,6,10])
 ```
 
 ```@raw html
@@ -104,7 +127,7 @@ fig = plotCSDs(dataset, system, ids = [1,4,6,10])
 
 ```julia
 #Now plot all the data in separate plots
-fig2 = plotCSDs(dataset, system, mode = :separate, figure = (fontsize = 20, 
+fig2 = plot_CSDs(dataset, system, mode = :separate, figure = (fontsize = 20, 
     figure_padding = 30))
 ```
 
@@ -112,15 +135,13 @@ fig2 = plotCSDs(dataset, system, mode = :separate, figure = (fontsize = 20,
 
 ## Estimating parameters: fitting a model to the synthetic data
 We will now estimate the kinetic parameters from the dataset. For this purpose, we are using 
-the function `estimateParameters()`. We will run this with the default values in this case,
+the function `estimate_parameters()`. We will run this with the default values in this case,
 but see the page [Tuning parameter estimation](@ref) for ways to tune the parameter 
-estimation procedure. Also consult the docstring of the `estimateParameters` function by 
-writing `?estimateParameters` in your Julia session.
+estimation procedure. Also consult the docstring of the `estimate_parameters` function by 
+writing `?estimate_parameters` in your Julia session.
 
 ```julia
-estsystem = estimateParameters(system, dataset)
-conditions, d43, P = generateAttainableRegion(estsystem, npointstemperature = 50, npointsfeedconc = 50,
-        npointsresidencetime = 50)
+estsystem = estimate_parameters(system, dataset)
 ```
 `estsystem` should be a new system specification that contains the estimated parameters, which 
 will be shown in the Julia session. It should look like this:
@@ -145,7 +166,7 @@ explanation, see [Solving root finding problem](@ref)
 ```julia
 #Plot quality of fit
 #Re-create tutorial figure 
-fig3 = plotFitQuality(estsystem, dataset, ids = [1,4,6,10], mode = :combined, 
+fig3 = plot_fit_quality(estsystem, dataset, ids = [1,4,6,10], mode = :combined, 
     axislegend = false)
 ```
 
@@ -153,25 +174,25 @@ fig3 = plotFitQuality(estsystem, dataset, ids = [1,4,6,10], mode = :combined,
 
 ```julia
 #Or plot all data
-fig4 = plotFitQuality(estsystem, dataset, mode = :separate)
+fig4 = plot_fit_quality(estsystem, dataset, mode = :separate)
 ```
 
 TODO: insert plot with the separate fit qualities.
 
 ## Generating an attainable region
 We can now proceed to populate the attainable region by varying process conditions. The 
-`generateAttainableRegion` function allows to do this in an easy manner. Specifically, we 
+`generate_attainable_region` function allows to do this in an easy manner. Specifically, we 
 vary the temperature in the crystallizer, the feed concentration, as well as the residence 
 time. By default, the function selects reasonable ranges for these values for this case 
-study. More information on this can be obtained by typing `?generateAttainableRegion` in the 
-Julia session or by considering the relevant page in the documentation [generateAttainableRegion](@ref). 
+study. More information on this can be obtained by typing `?generate_attainable_region` in the 
+Julia session or by considering the relevant page in the documentation [generate_attainable_region](@ref). 
 The function will return volume-weighted mean particle sizes at each operating point, `d43` 
 in [m], as well as productivity values `P` in [``\mathrm{kg} \mathrm{m}^{-3} \mathrm{s}^{-1}``].
 
 ```julia
 #Generate data for the attainable region
-conditions, d43, P = generateAttainableRegion(estsystem, npointstemperature = 50, npointsfeedconc = 50,
-        npointsresidencetime = 50)
+conditions, d43, P = generate_attainable_region(estsystem, npoints_temperature = 50, npoints_feed_conc = 50,
+        npoints_residence_time = 50)
 ```
 Note that we have intentionally reduced the number of points investigated, so that the code 
 finishes running quicker. The output in the book chapter was generated using ``200 \times 200 \times 200`` 
@@ -183,13 +204,14 @@ values in a static plot.
 ```julia
 #Plot attainable region
 #static plot for the tutorial.
+#TODO: add code for fig5
 ```
 
 In order to explore which operating condition generates which point in the attainable region, 
 there is a dynamic analysis tool available:
 ```julia
 #dynamic plot for exploring
-fig6 = plotAttainableRegion_dynamic(system, conditions, d43, P)
+fig6 = plot_attainable_region_dynamic(system, conditions, d43, P)
 ```
 
 `fig6` is an interactive figure. By left-clicking on specific points in the attainable 

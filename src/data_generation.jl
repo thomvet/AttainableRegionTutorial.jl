@@ -72,26 +72,26 @@ $FIELDS
 b = (S, T, M, p) -> p[1] * S^p[2] * M^p[3]
 g = (S, T, p) -> p[1] * S^p[2] * exp(- p[3] / 8.31441 / (T+273.15))
 cstar = (T,p) -> 3.79e-2*T^2 + 3.77e-1*T + 2.07e1
-SystemSpecification(; crystaldensity = 1200.0,
-         crystalshapefactor = pi / 6,
+SystemSpecification(; density = 1200.0,
+         shape_factor = pi / 6,
          solubility = FunctionalExpression(cstar, 0),
-         nucleationrate = FunctionalExpression(b, 3),
-         growthrate = FunctionalExpression(g, 3),
+         nucleation_rate = FunctionalExpression(b, 3),
+         growth_rate = FunctionalExpression(g, 3),
          parameters = [3.34e-4, 1.1, 1.44e4, 3e5, 2.0, 1.6])
 ```
 
 """
 @kwdef struct SystemSpecification{F1,F2,F3}
     "Density of the crystalline material [kg m⁻³]"
-    crystaldensity::Float64 = 1200.0
+    density::Float64 = 1200.0
     "Volume shape factor k, so that volume of a crystal is V = kL³"
-    shapefactor::Float64 = pi/6
+    shape_factor::Float64 = pi/6
     "Solubility function [kg m⁻³]"
     solubility::F1 = FunctionalExpression(Cstar, 0)
     "Growth rate  [m s⁻¹]"
-    growthrate::F2 = FunctionalExpression(G, 3)
+    growth_rate::F2 = FunctionalExpression(G, 3)
     "Nucleation rate [m⁻³ s⁻¹]"
-    nucleationrate::F3 = FunctionalExpression(B, 3)
+    nucleation_rate::F3 = FunctionalExpression(B, 3)
     "Vector of parameters occuring in solubility function and growth and nucleation rates"
     parameters::Vector{Float64} = [3.34e-4, 1.1, 1.44e4, 3e5, 2.0, 1.6]
 end
@@ -110,14 +110,14 @@ $FIELDS
 
 To generate artificial data from a model:
 ```
-Dataset(residencetimes, temperatures, feedconcentrations, 
+Dataset(residence_times, temperatures, feed_concentrations, 
         system::SystemSpecification = SystemSpecification(); 
-        nBins = 101, maxSize = 2000e-6, noiselevel = 0.02)
+        nBins = 101, maxSize = 2000e-6, noise_level = 0.02)
 ```
 
 To directly supply measured data:
 ```
-Dataset(residencetimes, temperatures, feedconcentrations, particlesizes, CSDs)
+Dataset(residence_times, temperatures, feed_concentrations, particle_sizes, CSDs)
 ```
 
 """
@@ -137,16 +137,16 @@ end
 function Base.show(io::IO, ::MIME"text/plain", z::SystemSpecification)
     Np = length(z.parameters)
 
-    column_labels_matconst = ["shapefactor", "crystaldensity"]
-    column_labels_kintherm = ["solubility", "growthrate", "nucleationrate"]
+    column_labels_matconst = ["shape factor", "density"]
+    column_labels_kintherm = ["solubility", "growth rate", "nucleation rate"]
     row_labels_kintherm = ["Function", ["p"*subscript(i) for i in 1:Np]...]
 
-    pt_matconst = pretty_table([z.shapefactor z.crystaldensity];
+    pt_matconst = pretty_table([z.shape_factor z.density];
         column_labels = column_labels_matconst, title = "Material Constants")
 
     s = z.solubility
-    g = z.growthrate
-    n = z.nucleationrate
+    g = z.growth_rate
+    n = z.nucleation_rate
     p = z.parameters
 
     one = [p[1:s.Nparameters]..., ["" for _ in s.Nparameters+1:Np]...]
@@ -158,7 +158,7 @@ function Base.show(io::IO, ::MIME"text/plain", z::SystemSpecification)
         row_labels = row_labels_kintherm, row_label_column_alignment = :l)
 end
 
-function Dataset(residencetimes, temperatures, feedconcentrations, 
+function Dataset(residence_times, temperatures, feed_concentrations, 
         system::SystemSpecification = SystemSpecification(); 
         nBins = 101, maxSize = 2000e-6, noiselevel = 0.02)
     #Initialize Dataset, n will be filled during generation of synthetic data, hence 
@@ -169,10 +169,10 @@ function Dataset(residencetimes, temperatures, feedconcentrations,
 
     #simulate CSD for each operating condition given the kinetics provided in system
     for i in eachindex(temperatures)
-        τi = residencetimes[i]
+        τi = residence_times[i]
         Ti = temperatures[i]
-        Cfi = feedconcentrations[i]
-        ni, Cssi = simulateCSD(L, τi, Ti, Cfi, system)
+        Cfi = feed_concentrations[i]
+        ni, Cssi = simulate_CSD(L, τi, Ti, Cfi, system)
         n[:,i] = ni 
     end
 
@@ -183,7 +183,7 @@ function Dataset(residencetimes, temperatures, feedconcentrations,
     end
 
     #generate dataset structure
-    data = Dataset(residencetimes, temperatures, feedconcentrations, L, nnoise)
+    data = Dataset(residence_times, temperatures, feed_concentrations, L, nnoise)
     return data
 end
 
