@@ -184,8 +184,8 @@ We can now proceed to populate the attainable region by varying process conditio
 `generate_attainable_region` function allows to do this in an easy manner. Specifically, we 
 vary the temperature in the crystallizer, the feed concentration, as well as the residence 
 time. By default, the function selects reasonable ranges for these values for this case 
-study. More information on this can be obtained by typing `?generate_attainable_region` in the 
-Julia session or by considering the relevant page in the documentation [generate_attainable_region](@ref). 
+study. More information on this can be obtained by typing `?generate_attainable_region` in your 
+Julia session or directly here: [`generate_attainable_region`](@ref). 
 The function will return volume-weighted mean particle sizes at each operating point, `d43` 
 in [m], as well as productivity values `P` in [``\mathrm{kg} \mathrm{m}^{-3} \mathrm{s}^{-1}``].
 
