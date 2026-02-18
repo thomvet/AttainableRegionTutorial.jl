@@ -9,6 +9,8 @@ In this tutorial we will detail how attainable regions can be computed for a sin
 suspension mixed product removal (MSMPR) crystallizer at steady state. For the sake of 
 simplicity, we will do this based on synthetic data, though originating from case study 
 published by [Power et al. (2015)](https://www.sciencedirect.com/science/article/abs/pii/S0009250915001207)
+where experimental data was used to establish kinetics for the paracetamol crystallizing from 
+isopropanol/water mixtures in an MSMPR.
 
 We proceed by the following steps:
 * Background on the MSMPR crystallizer model
@@ -57,17 +59,17 @@ where ``C_\mathrm{f}`` is the feed concentration and ``C_\mathrm{ss}`` is the st
 concentration, both in [kg m``^{-3}``]. The suspension density can be calculated from the 
 steady state crystal size distribution:
 ```math
-\begin{align}
+\begin{align*}
 M_\mathrm{T} &=&& k_\mathrm{v}\rho_\mathrm{c}\int\limits_0^\infty L^3 n(L) \mathrm{d} L \\
              &=&& k_\mathrm{v}\rho_\mathrm{c}\int\limits_0^\infty L^3 \frac{B(S,T,M_\mathrm{T})}{G(S,T)}\exp\left(-\frac{L}{G\tau}\right) \mathrm{d} L \\
              &=&& 6k_\mathrm{v}\rho_\mathrm{c} τ^4 B G^3 
-\end{align} 
+\end{align*} 
 ```
 where ``\rho_\mathrm{c}`` is the density of the crystals in [kg m``^{-3}``] and ``k_\mathrm{v}`` 
 is the volume shape factor of the crystals, defined so that ``V_\mathrm{c} = k_\mathrm{v}L^3`` 
 where ``V_\mathrm{c}`` is the volume of a crystal with characteristic size ``L``. This means, 
 for example, that ``k_\mathrm{v} = 1`` for cubes with side length ``L``, 
-``k_\mathrm{v} = \pi/6`` for spheres of diameter ```L``, 
+``k_\mathrm{v} = \pi/6`` for spheres of diameter ``L``, 
 ``k_\mathrm{v} = \left(6\sqrt{2}\right)^{-1}`` for regular tetrahedra with edge length 
 ``L``, etc.
 
@@ -79,11 +81,27 @@ solves the mass balance and population balance equation numerically.
 We start out by defining a description of the "system" we are crystallizing. This includes 
 defining material constants, such as the crystal density and the volumetric shape factor, as 
 well as defining an expression of the solubility against temperature and the kinetics of 
-nucleation and crystal growth.
+nucleation and crystal growth. As outlined in the book chapter, we will use the kinetics 
+and solubility established by [Power et al. (2015)](https://www.sciencedirect.com/science/article/abs/pii/S0009250915001207) 
+for paracetamol crystallizing from isopropanol/water mixtures.
 
-As outlined in the book chapter, we will use 
+Solubility in [kg m``^3``] against temperature in [°C]:
+```math
+C_\star(T) = 3.79 \times 10^{-2} T^2 + 3.77 \times 10^{-1} T + 2.07 \times 10^{1} 
+```
 
-[Supplying custom kinetics and thermodynamics](@ref)
+#nucleation rate [m⁻³ s ⁻¹]
+```math
+B(S, T, M_\mathrm{T}) = p[1] * S^p[2] * \left(\frac{M_\mathrm{T}}\right)^p[3] 
+```
+#crystal growth rate [m/s]
+```math
+G(S, T) = p[1] * S^p[2] * exp(- p[3] / 8.31441 / (T + 273.15)) 
+```
+
+These kinetics and the solubility line are built into AttainableRegionTutorial.jl by default 
+and specifying them has therefore been simplified as much as possible. We can do it by 
+running the following two lines of Julia code:
 
 ```julia
 using AttainableRegionTutorial
@@ -91,10 +109,15 @@ using AttainableRegionTutorial
 #Initialize System
 system = SystemSpecification()
 ```
+You should see the following output in your Julia REPL. Note that the (tunable) parameters 
+in the kinetic expressions have been numbered consecutively and that it is clear which 
+parameter occurs in which functional expression. 
 
 ```@raw html
 <img src="../assets/Tutorial_SystemSpecification.png" alt="REPL Output showing the default system specification used in the tutorial" width="310"/>
 ```
+
+We next generat
 
 ```julia
 #generate dataset
@@ -161,7 +184,7 @@ During the estimation procedure you will likely encounter warnings like this:
 ```
 These are nothing to be concerned about. They stem for the particular way the root finding 
 problem required to solve the PBE and mass balance together is implemented. For a deeper 
-explanation, see [Solving root finding problem](@ref)
+explanation, see [Solving the root finding problem](@ref)
 
 ```julia
 #Plot quality of fit
