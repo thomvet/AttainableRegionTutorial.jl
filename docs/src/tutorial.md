@@ -32,7 +32,7 @@ is the supersaturation- (``S``) and temperature-dependent (``T``) growth rate
 by the ratio of the volume of solution inside the crystallizer, ``V``, and the flow rate of 
 the particle-free inlet, ``Q`` [m``^3`` s``^{-1}``]). With the typical assumption that nucleation 
 occurs at negligibly small particle size (treated as ``L=0``), a boundary condition 
-``n(L=0,t) = B(S,T,M_\mathrm{T})/G(S,T)`` completes the description of the crystal phase in 
+``n(L=0,t) = B(S,T,M_\mathrm{T})/G(S,T)`` completes the description of the solid phase in 
 the crystallizer. ``B(S,T,M_\mathrm{T})`` is the nucleation rate in [m``^{-3}`` s``^{-1}``] 
 and ``M_\mathrm{T}`` is the magma/suspension density in [kg m``^{-3}``].
 
@@ -117,7 +117,11 @@ parameter occurs in which functional expression.
 <img src="../assets/Tutorial_SystemSpecification.png" alt="REPL Output showing the default system specification used in the tutorial" width="310"/>
 ```
 
-We next generat
+The code contained in AttainableRegionTutorial.jl also allows to customize the kinetic and thermodynamic expressions, this is explained in [Supplying custom kinetics and thermodynamics](@ref)
+
+We next generate a set of synthetic data of the MSMPR crystallizer at steady state. We do this at similar conditions
+ that were used in the experiments performed by [Power et al. (2015)](https://www.sciencedirect.com/science/article/abs/pii/S0009250915001207). 
+ We thus specify a set of residence times, temperatures and feed concentrations and automatically calculate the resulting steady state CSD:
 
 ```julia
 #generate dataset
@@ -148,6 +152,7 @@ fig = plot_CSDs(dataset, system, ids = [1,4,6,10])
 <img src="../assets/Tutorial_CSDs_combined.png" alt="REPL Output showing the CSDs in a combined plot" width="466"/>
 ```
 
+For a full overview of the dataset, we can run the code below:
 ```julia
 #Now plot all the data in separate plots
 fig2 = plot_CSDs(dataset, system, mode = :separate, figure = (fontsize = 20, 
@@ -160,7 +165,7 @@ fig2 = plot_CSDs(dataset, system, mode = :separate, figure = (fontsize = 20,
 We will now estimate the kinetic parameters from the dataset. For this purpose, we are using 
 the function `estimate_parameters()`. We will run this with the default values in this case,
 but see the page [Tuning parameter estimation](@ref) for ways to tune the parameter 
-estimation procedure. Also consult the docstring of the `estimate_parameters` function by 
+estimation procedure. You can also consult the docstring of the `estimate_parameters` function by 
 writing `?estimate_parameters` in your Julia session.
 
 ```julia
@@ -186,6 +191,8 @@ These are nothing to be concerned about. They stem for the particular way the ro
 problem required to solve the PBE and mass balance together is implemented. For a deeper 
 explanation, see [Solving the root finding problem](@ref)
 
+We can evaluate the quality of fit by plotting the estimated CSDs and the CSDs contained in the dataset.
+The below command generates this comparison as shown in the tutorial:
 ```julia
 #Plot quality of fit
 #Re-create tutorial figure 
@@ -195,6 +202,7 @@ fig3 = plot_fit_quality(estsystem, dataset, ids = [1,4,6,10], mode = :combined,
 
 ![Image showing data fit quality in combined plot](./assets/Tutorial_FitQuality.png)
 
+Or, alternatively, we can also show all CSDs in seperate plots:
 ```julia
 #Or plot all data
 fig4 = plot_fit_quality(estsystem, dataset, mode = :separate)
