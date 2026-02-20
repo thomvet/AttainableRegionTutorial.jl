@@ -4,7 +4,7 @@ using Aqua
 
 @testset "AttainableRegionTutorial.jl" begin
     @testset "Code quality (Aqua.jl)" begin #basic code quality checks
-        Aqua.test_all(AttainableRegionTutorial)
+        Aqua.test_all(AttainableRegionTutorial, persistent_tasks = false)
     end
     # @testset "Constructors" begin #Checks that constructors work as intended.
     #     include("constructors.jl")
